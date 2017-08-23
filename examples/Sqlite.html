@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Sqlite</title>
+</head>
+<script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+<script src="https://unpkg.com/react@15.6.1/dist/react.min.js"></script>
+<script src="https://unpkg.com/react-dom@15.6.1/dist/react-dom.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.38/browser.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-bootstrap/0.31.2/react-bootstrap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/0.4.0/js/sql.js"></script>
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/latest/css/bootstrap.min.css">
+
+<body>
+  <div id="app"></div>
+  <script type="text/babel">
+
+  let {
+    Grid, Row, Col, Table
+  } = window.ReactBootstrap;
+
+  class App extends React.Component {
+    constructor(props) {
+      super(props);
+      this.state ={
+        cols : null,
+        rows : null
+      };
+    }
+    componentDidMount() {
+      var xhr = new XMLHttpRequest();
+      xhr.open('GET', "sqlite.db3", true);
+      xhr.responseType = 'arraybuffer';
+      xhr.onload = function(e) {
+        var bytes = new Uint8Array(xhr.response);
+        var db = new SQL.Database(bytes);
+        var contents = db.exec("SELECT * FROM test");
+        var cols = Object.values(contents[0].columns).map((n)=>{return <th>{n}</th>});
+        var rows = contents[0].values.map((n)=>{
+          return(
+            <tr>
+              {n.map((m)=>{ return <td>{m}</td> })}
+            </tr>
+          );
+        });
+        this.setState({cols : cols, rows : rows});
+      }.bind(this);
+      xhr.send();
+    }
+    render() {
+      return (
+        <div>
+          <Table>
+            <thead>
+              <tr>
+                {this.state.cols}
+              </tr>
+            </thead>
+            <tbody>
+              {this.state.rows}
+            </tbody>
+          </Table>
+        </div>
+      );
+    }
+  }
+
+  ReactDOM.render(<App />, document.querySelector('#app'));
+
+
+
+        //var sqlstr = "CREATE TABLE hello (a int, b char);";
+        //sqlstr += "INSERT INTO hello VALUES (0, 'hello');"
+        //sqlstr += "INSERT INTO hello VALUES (1, 'world');"
+        //db.run(sqlstr); // Run the query without returning anything
+
+  </script>
+</body>
+</html>
