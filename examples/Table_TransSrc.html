@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Table_TransSrc</title>
+</head>
+  <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+  <script src="https://unpkg.com/react@15.6.1/dist/react.min.js"></script>
+  <script src="https://unpkg.com/react-dom@15.6.1/dist/react-dom.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.38/browser.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-bootstrap/0.31.2/react-bootstrap.min.js"></script>
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/latest/css/bootstrap.min.css">
+
+  <body>
+    <div id="app"></div>
+    <script type="text/babel">
+    let { Button
+        } = window.ReactBootstrap;
+      class App extends React.Component {
+        onClick(){
+          let value = {
+            title : "Table 1 Conditions",
+            data : [
+              {A : 1, B : 2, C : 3},
+              {A : 2, B : 2, C : 6}
+            ]
+          };
+          if(('sessionStorage' in window) && (window.sessionStorage !== null)){
+            sessionStorage.setItem('conditions', JSON.stringify(value));
+            window.location.href = "Table_TransDst.html";
+          }else{
+            //つかえない時
+          }
+        }
+        render() {
+          return (
+            <div style={{margin:'50px'}}>
+              <Button bsStyle="primary" bsSize="large"
+                onClick={this.onClick}>Large button</Button>
+            </div>
+          );
+        }
+      }
+
+      ReactDOM.render(<App />, document.querySelector('#app'));
+
+    </script>
+  </body>
+</html>
