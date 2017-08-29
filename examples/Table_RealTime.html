@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Table_RealTimeRender</title>
+  <title>Table_RealTime</title>
 </head>
 <script src="https://unpkg.com/react@15.6.1/dist/react.min.js"></script>
 <script src="https://unpkg.com/react-dom@15.6.1/dist/react-dom.min.js"></script>
@@ -14,13 +14,17 @@
 
 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/latest/css/bootstrap.min.css">
 <style type="text/css">
+.sheet {
+  page-break-after: always;
+}
 @page {
   size: A4;
   margin: 0;
 }
 @media print {
   body {
-    width: 210mm; /* needed for Chrome */
+    width:  210mm; /* needed for Chrome */
+    height: 296mm; /* 1mm余裕をもたせる */
   }
   #nonprint {
     display: none;
@@ -37,6 +41,7 @@
     title : "Directions",
     subtitle : "(draft)",
     detail : [
+    {type : "barcode", value : "A012345"},
     {type : "condition", title : "DateTime", value : "2017-08-29"},
     {type : "br"},
     {type : "condition", title : "CompanyName", value : "MyCompany"},
@@ -136,21 +141,22 @@
     }
   }
 
-  class TableBarCode extends React.Component {
+  class TableBarcode extends React.Component {
     constructor(props) {
       super(props)
     }
     componentDidMount(){
-      JsBarcode("#canvasBarCode", "1234", {
-        width:4,
+      JsBarcode("#canvasBarCode", this.props.value, {
+        width: 1,
         height:40,
-        displayValue: true
+        fontSize: 12,
+        textMargin : 2
       });
     }
     render() {
       return (
         <div>
-          <canvas id="canvasBarCode"></canvas>
+          <svg  id="canvasBarCode"></svg >
         </div>
       );
     }
@@ -271,6 +277,8 @@
                      <h4>{i.title}</h4>
                        {i.value}
                     </Alert>);
+          case "barcode":
+            return (<TableBarcode value={i.value}/>);
           default:
             return "";
         }
@@ -282,7 +290,6 @@
         <div style={{margin:'50px'}}>
           <TableTitle title={this.state.title}
                       subtitle={this.state.subtitle} />
-          <TableBarCode />
           {dst}
         </div>
       );
@@ -307,15 +314,18 @@
     }
     render() {
       return (
-        <div style={{margin:'50px'}}>
-          <div id="nonprint" >
+        <div>
+          <div id="nonprint" style={{padding:'20px'}}>
             <InputApp defaultValue={jsyaml.dump(JSON.parse(value))}
                     onChange={this.onChange.bind(this)} />
             <h3>View</h3>
           </div>
-          <div>
+          <section style={{pageBreakAfter : 'always'}}>
             <TableParse src={this.state.value}/>
-          </div>
+          </section>
+          <section style={{pageBreakAfter : 'always'}}>
+            <TableParse src={this.state.value}/>
+          </section>
         </div>
       );
     }
