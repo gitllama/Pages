@@ -1,0 +1,306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Table_RealTimeRender</title>
+</head>
+<script src="https://unpkg.com/react@15.6.1/dist/react.min.js"></script>
+<script src="https://unpkg.com/react-dom@15.6.1/dist/react-dom.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.38/browser.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-bootstrap/0.31.2/react-bootstrap.min.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/3.4.2/js-yaml.min.js"></script>
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/latest/css/bootstrap.min.css">
+<style type="text/css">
+@page {
+  size: A4;
+  margin: 0;
+}
+@media print {
+  body {
+    width: 210mm; /* needed for Chrome */
+  }
+  #nonprint {
+    display: none;
+  }
+}
+</style>
+
+<body>
+  <div id="app"></div>
+  <script type="text/babel">
+
+  const logo = "";
+  const value = JSON.stringify({
+    title : "Directions",
+    subtitle : "(draft)",
+    detail : [
+    {type : "condition", title : "DateTime", value : "2017-08-29"},
+    {type : "br"},
+    {type : "condition", title : "CompanyName", value : "MyCompany"},
+    {type : "condition", title : "No.", value : "A123456789"},
+    {type : "condition", title : "A person in charge", value : "llama"},
+    {type : "note", title : "Note :",
+       value : "If you need an explanation, write it in this place."},
+    {type : "table", title : "Table 1 Conditions",
+      data : [
+        {A : 1, B : 2, C : 3},
+        {A : 2, B : 2, C : 6}
+      ]
+    },
+    {type : "warning", title : "warning!", value : "Here is the place to write the items you want particular attention."}
+  ]});
+
+  let {
+        Button,FormGroup,FormControl,
+        PageHeader, FieldGroup,
+        Grid, Row, Col, Jumbotron, Table,
+        Panel, Label, Alert
+      } = window.ReactBootstrap;
+
+  /*Input*/
+
+  class InputApp extends React.Component {
+    constructor(props) {
+      super(props);
+    }
+    propTypes: {
+      onChange: React.PropTypes.func.isRequired
+    }
+    onChange(){
+      try{
+        let dst_yaml = jsyaml.load(ReactDOM.findDOMNode(this.refs.inputText).value);
+        let dst = JSON.stringify(dst_yaml);
+        this.props.onChange({
+          value : dst
+        });
+      }
+      catch(e){
+        this.props.onChange({
+          value : null
+        });
+      }
+
+    }
+    render() {
+      return (
+        <Jumbotron style={{padding:"15px"}}>
+          <h3>Edit Yaml</h3>
+          <FormGroup controlId="formControlsTextarea">
+            <FormControl componentClass="textarea"
+                         placeholder="textarea"
+                         ref="inputText"
+                         style={{height:"400px"}}
+                         defaultValue={this.props.defaultValue}
+                         onChange={this.onChange.bind(this)}/>
+            </FormGroup>
+        </Jumbotron>
+      );
+    }
+  }
+
+  /*Output*/
+
+  class TableTitle extends React.Component {
+    constructor(props) {
+      super(props)
+    }
+    render() {
+      return (
+        <div>
+          <img height="40px" src={logo} />
+          <PageHeader>{this.props.title} <small>{this.props.subtitle}</small></PageHeader>
+        </div>
+      );
+    }
+  }
+
+  class TableConditons extends React.Component {
+    constructor(props) {
+      super(props)
+    }
+    render() {
+      return (
+        <div style={{display:"flex"}}>
+          <div style={{width:"160px", textAlign:"left"}}>
+            <strong>{this.props.title}</strong>
+          </div>
+          <div style={{width:"30px", textAlign:"center"}}>
+            <strong>:</strong>
+          </div>
+          <div>{this.props.value}</div>
+        </div>
+      );
+    }
+  }
+
+  class TableMain extends React.Component {
+    constructor(props) {
+      super(props)
+      this.state={
+        title : this.props.title,
+        data : this.props.src,
+        index : this.props.index,
+        isColSpan : this.props.isColSpan,
+        isResponsive : this.props.isResponsive
+      };
+    }
+    componentWillReceiveProps(nextProps) {
+      this.setState({
+        title : nextProps.title,
+        data : nextProps.src,
+        index : nextProps.index,
+        isColSpan : nextProps.isColSpan,
+        isResponsive : nextProps.isResponsive
+      });
+    }
+    render() {
+      //thead
+      const th_dom = Object.keys(this.state.data[0]).map((n)=>{return <th>{n}</th>});
+      const thead_dom = this.state.index ? <thead><tr> <th>#</th> {th_dom} </tr></thead>
+                                         : <thead><tr> {th_dom} </tr></thead>;
+      //tbody
+      const td_dom =(value)=>{
+        if(!this.state.isColSpan) return Object.values(value).map((n)=>{return <td>{n}</td>});
+        var hoge = Object.values(value).map((n)=> n);
+        var dst = [];
+        for(let i = 0; i < hoge.length; i++){
+          if(i>0 && hoge[i-1] == hoge[i]) continue;
+          for(var j = 1;j< hoge.length - i; j++){
+            if(hoge[i] != hoge[i+j]) break;
+          }
+          if(j > 1) dst.push(<td colSpan={j}>{hoge[i]}</td>);
+          else dst.push(<td>{hoge[i]}</td>);
+        }
+        return dst;
+      }
+      const td_doms =(value, index)=>{
+        return this.state.index ? <tr><td>{index+1}</td> {td_dom(value)}</tr>
+                                : <tr>{td_dom(value)}</tr>;
+      };
+      const tbody_dom = this.state.data.map((value, index)=>{
+        return <tbody> {td_doms(value, index)} </tbody>;
+      });
+      //isResponsive
+      const table_dom =(thead,tbody)=>{
+        return this.state.isResponsive
+          ? <Table striped bordered condensed hover>{thead}{tbody}</Table>
+          : <Table responsive>{thead}{tbody}</Table>;
+      };
+      //return
+      return (
+        <div>
+          <label>{this.state.title}</label>
+          {table_dom(thead_dom,tbody_dom)}
+        </div>
+      );
+    }
+  }
+
+  class TableParse extends React.Component {
+    constructor(props) {
+      super(props);
+      this.state={
+        title : "null",
+        subtitle : "null",
+        detail : null
+      };
+    }
+    componentWillReceiveProps(nextProps) {
+      try{
+        let hoge = JSON.parse(nextProps.src);
+        this.setState({
+          title : hoge.title,
+          subtitle : hoge.subtitle,
+          detail : hoge.detail
+        });
+      }catch(e){
+        console.log(e);
+        let m =  <p>yaml is wrong<br/>{e.toString()}</p>;
+        this.setState({
+          title : null,
+          subtitle : null,
+          detail :  [
+            {type : "warning", title : "Err!", value :m}
+          ]
+        });
+      }
+    }
+    changeTable(src){
+      if(src == null) return null;
+      return src.map((i)=>{
+        switch(i.type){
+          case "br":
+            return <br/>;
+          case "condition":
+            return <TableConditons title={i.title} value={i.value}/>;
+          case "note":
+            return <div  style={{margin:'20px 0px 20px 0px'}}>
+                      <p><strong>{i.title}</strong></p>
+                      <p style={{margin:'0px 0px 0px 20px'}}>{i.value}</p>
+                    </div>;
+          case "table":
+            return <TableMain title={i.title} src={i.data}
+                      index={true}
+                      isResponsive={false}
+                      isColSpan={true} />;
+          case "warning":
+            return (<Alert bsStyle="danger" data-html="true">
+                     <h4>{i.title}</h4>
+                       {i.value}
+                    </Alert>);
+          default:
+            return "";
+        }
+      });
+    }
+    render() {
+      const dst = this.changeTable(this.state.detail);
+      return (
+        <div style={{margin:'50px'}}>
+          <TableTitle title={this.state.title}
+                      subtitle={this.state.subtitle} />
+          {dst}
+        </div>
+      );
+    }
+  }
+
+
+  /*App*/
+
+  class App extends React.Component {
+    constructor(props) {
+      super(props);
+      this.state={
+        value : null
+      };
+    }
+    componentDidMount(){
+      this.setState({value : value});
+    }
+    onChange(e){
+      this.setState({value : e.value});
+    }
+    render() {
+      return (
+        <div style={{margin:'50px'}}>
+          <div id="nonprint" >
+            <InputApp defaultValue={jsyaml.dump(JSON.parse(value))}
+                    onChange={this.onChange.bind(this)} />
+            <h3>View</h3>
+          </div>
+          <div>
+            <TableParse src={this.state.value}/>
+          </div>
+        </div>
+      );
+    }
+  }
+
+  ReactDOM.render(<App />, document.querySelector('#app'));
+
+  </script>
+</body>
+</html>
