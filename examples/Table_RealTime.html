@@ -10,6 +10,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-bootstrap/0.31.2/react-bootstrap.min.js"></script>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/3.4.2/js-yaml.min.js"></script>
+<script src="https://cdn.jsdelivr.net/jsbarcode/3.5.8/barcodes/JsBarcode.code128.min.js"></script>
 
 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/latest/css/bootstrap.min.css">
 <style type="text/css">
@@ -130,6 +131,26 @@
             <strong>:</strong>
           </div>
           <div>{this.props.value}</div>
+        </div>
+      );
+    }
+  }
+
+  class TableBarCode extends React.Component {
+    constructor(props) {
+      super(props)
+    }
+    componentDidMount(){
+      JsBarcode("#canvasBarCode", "1234", {
+        width:4,
+        height:40,
+        displayValue: true
+      });
+    }
+    render() {
+      return (
+        <div>
+          <canvas id="canvasBarCode"></canvas>
         </div>
       );
     }
@@ -261,6 +282,7 @@
         <div style={{margin:'50px'}}>
           <TableTitle title={this.state.title}
                       subtitle={this.state.subtitle} />
+          <TableBarCode />
           {dst}
         </div>
       );
