@@ -3,6 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>Table_RealTimeRender</title>
+  <meta name="description"　content="ページのキーワード">
 </head>
 <script src="https://unpkg.com/react@15.6.1/dist/react.min.js"></script>
 <script src="https://unpkg.com/react-dom@15.6.1/dist/react-dom.min.js"></script>
@@ -36,14 +37,21 @@
   const logo = "";
   const value = JSON.stringify(
   {
-    size : 200,
-    MaxNumOfShots : {X: 10,Y:7},
-    SizeOfShot : {X:17.2,Y:24.8},
-    chips : 54,
-    notch : 90,
-    edgecut : 5,
-    notchcut: 9,
-    width : 500
+    Setting : {
+      WfSize : 200,
+      ShotsNum : {X:10,Y:7},
+      ShotSize : {X:17.2,Y:24.8},
+      Chips : 54,
+      Notch : 90,
+      Edgecut : 5,
+      Notchcut: 9,
+      ArixOrigin:{X:0,Y:0},
+      ArixInversion:{X:false,Y:false}
+    },
+    Values : [
+      { X: 2, Y:2, Value:10},
+      { X: 2, Y:3, Value:9}
+    ]
   });
 
   let {
@@ -100,175 +108,192 @@
   class Wfmap extends React.Component {
     constructor(props) {
       super(props);
-      this.margin = 1;
       this.state={
-          r : 200,
-          MaxNumOfShots : {X:1,Y:1},
-          SizeOfShot : {X:1,Y:1},
-          notch : 90,
-          edgecut : 3,
-          notchcut : 9,
-          viewbox : "0 0 10 10",
-          width : 500
+          Margin : { Top:20,Bottom:20, Left:20,Right:20},
+          DisableChip : { Top: 1,Bottom: 1, Left :1,Right:1},
+          Setting : null,
+          Values  : null
       };
     }
     componentWillReceiveProps(nextProps) {
-      /*
-      rot = 0
-      if notch == "right" :
-          rot = 0
-      elif notch == "back":
-          rot = 270
-      elif notch == "left":
-          rot = 180
-      else:
-          rot = 90
-          */
       try{
         let hoge = JSON.parse(nextProps.src);
-
-        var w = hoge.SizeOfShot.X * (hoge.MaxNumOfShots.X + 4);
-        var h = hoge.SizeOfShot.Y * (hoge.MaxNumOfShots.Y + 4);
         this.setState({
-            r : hoge.size,
-            MaxNumOfShots : hoge.MaxNumOfShots,
-            SizeOfShot : hoge.SizeOfShot,
-            notch : hoge.notch,
-            edgecut : hoge.edgecut,
-            notchcut : hoge.notchcut,
-            viewbox : `0 0 ${w} ${h}`,
-            width : hoge.width
+          Setting : hoge.Setting,
+          Values  : hoge.Values
         });
       }catch(e){
         console.log(e);
       }
     }
-    drawBackGround(){
-      let hoge = [];
-      let xs = this.state.SizeOfShot.X,
-          ys = this.state.SizeOfShot.Y,
-          x  = this.state.MaxNumOfShots.X,
-          y  = this.state.MaxNumOfShots.Y;
-
-      for(let i = 1; i < (x + 2) - 1; i++){
-        hoge.push({x1 : xs + i * xs, y1 : ys, x2: xs + i * xs, y2 : ys + (y + 1) * ys });
+    getStateObj(){
+      let ShotSize = this.state.Setting.ShotSize,
+          ShotsNum = this.state.Setting.ShotsNum,
+          margin = this.state.Margin,
+          disChip = this.state.DisableChip,
+          w = (ShotsNum.X + disChip.Left + disChip.Right) * ShotSize.X,
+          h = (ShotsNum.Y + disChip.Top + disChip.Bottom) * ShotSize.Y,
+          cx = w/2 + margin.Left,
+          cy = h/2 + margin.Top,
+          fullx = w + (margin.Left + margin.Right),
+          fully = h + (margin.Top + margin.Bottom);
+      return {
+        ShotSize : ShotSize,
+        ShotsNum : ShotsNum,
+        margin : margin,
+        disChip : disChip,
+        w : w,
+        h : h,
+        cx : cx,
+        cy : cy,
+        fullx : fullx,
+        fully : fully
       }
-      for(let i = 1;i < (y + 2) - 1; i++){
-        hoge.push({x1 : xs, y1 : ys + i * ys, x2 : xs + (x + 1) * xs, y2 : ys + i * ys });
+    }
+    Grid(){
+      let i = this.getStateObj();
+      let dst = [];
+      for(let x = i.margin.Left + i.disChip.Left*i.ShotSize.X; x < i.margin.Left + i.w; x+=i.ShotSize.X){
+        dst.push({
+          x1 : x,
+          x2 : x,
+          y1 : i.margin.Top,
+          y2 : i.margin.Top + i.h
+        });
       }
-      let lines = hoge.map((i)=><line x1={i.x1} y1={i.y1} x2={i.x2} y2={i.y2} stroke="lightgray" stroke-width="1" />);
+      for(let y = i.margin.Top + i.disChip.Top*i.ShotSize.Y; y < i.margin.Top + i.h; y+=i.ShotSize.Y){
+        dst.push({
+          x1 : i.margin.Left,
+          x2 : i.margin.Left + i.w,
+          y1 : y,
+          y2 : y
+        });
+      }
+      let lines = dst.map((n)=><line x1={n.x1} y1={n.y1} x2={n.x2} y2={n.y2} stroke="lightgray" stroke-width="1" />);
       return(
         <g>
           {lines}
-          <rect x={xs} y={ys} width={xs + (x+1)*xs} height={ys + (y+1)*ys}
+          <rect x={i.margin.Left} y={i.margin.Top} width={i.w} height={i.h}
                 stroke="black" fill="none" stroke-width="2" />
         </g>
       );
     }
-    drawWfNotch(){
-      var hoge;
+    WfExternal(){
       let radian =(deg)=> deg * Math.PI / 180;
       let degree =(rad)=> rad * 180 / Math.PI;
-      let x = (this.state.MaxNumOfShots.X + 4) * this.state.SizeOfShot.X/2,
-          y = (this.state.MaxNumOfShots.Y + 4) * this.state.SizeOfShot.Y/2,
+      let i = this.getStateObj();
 
-          r = this.state.r,
-          rot = this.state.notch,
-          notchcut = this.state.notchcut,
-          cutsize = this.state.edgecut/2,
-          rot_o = degree(Math.asin(cutsize * 2 / (r/2)));
+      let x = i.cx,
+          y = i.cy,
+          d = this.state.Setting.WfSize,
+          rot = this.state.Setting.Notch,
+          notchcut = this.state.Setting.Notchcut,
+          cutsize = this.state.Setting.Edgecut/2,
+          rot_o = degree(Math.asin(cutsize * 2 / (d/2)));
 
-      let cx_s = x + r/2 * Math.cos(radian(rot - rot_o)),
-          cy_s = y + r/2 * Math.sin(radian(rot - rot_o)),
-          cx_e = x + r/2 * Math.cos(radian(rot + rot_o)),
-          cy_e = y + r/2 * Math.sin(radian(rot + rot_o)),
-          nx = x + (r/2 - cutsize) * Math.cos(radian(rot)),
-          ny = y + (r/2 - cutsize) * Math.sin(radian(rot));
-      let str = `M ${cx_s} ${cy_s} A ${r/2} ${r/2} ${rot - rot_o} 1 0 ${cx_e}, ${cy_e} L ${nx}, ${ny} z`;
+      let cx_s = x + d/2 * Math.cos(radian(rot - rot_o)),
+          cy_s = y + d/2 * Math.sin(radian(rot - rot_o)),
+          cx_e = x + d/2 * Math.cos(radian(rot + rot_o)),
+          cy_e = y + d/2 * Math.sin(radian(rot + rot_o)),
+          nx = x + (d/2 - cutsize) * Math.cos(radian(rot)),
+          ny = y + (d/2 - cutsize) * Math.sin(radian(rot));
+      let str = `M ${cx_s} ${cy_s} A ${d/2} ${d/2} ${rot - rot_o} 1 0 ${cx_e}, ${cy_e} L ${nx}, ${ny} z`;
 
-      let cx_si = x + (r/2 - notchcut) * Math.cos(radian(rot)) - r/3 * Math.sin(radian(rot)),
-      cy_si = y + (r/2 - notchcut) * Math.sin(radian(rot)) - r/3 * Math.cos(radian(rot)),
-      cx_ei = x + (r/2 - notchcut) * Math.cos(radian(rot)) + r/3 * Math.sin(radian(rot)),
-      cy_ei = y + (r/2 - notchcut) * Math.sin(radian(rot)) + r/3 * Math.cos(radian(rot))
+      let cx_si = x + (d/2 - notchcut) * Math.cos(radian(rot)) - d/3 * Math.sin(radian(rot)),
+          cy_si = y + (d/2 - notchcut) * Math.sin(radian(rot)) - d/3 * Math.cos(radian(rot)),
+          cx_ei = x + (d/2 - notchcut) * Math.cos(radian(rot)) + d/3 * Math.sin(radian(rot)),
+          cy_ei = y + (d/2 - notchcut) * Math.sin(radian(rot)) + d/3 * Math.cos(radian(rot))
 
        //notch -> Edge -> Notch Reserved Distance
        return(
          <g>
-           <path d ={str} stroke="black" fill="none" stroke-width="2" />
-           <circle cx={x} cy={y} r={r/2- cutsize*2}
-                   stroke="black" fill="none" stroke-width="2" />
-           <line x2={cx_si} y1={cy_si} x1={cx_ei} y2={cy_ei} stroke="black" stroke-width="1" />
+           <path d ={str} stroke="black" fill="none" strokeWidth="2" />
+           <circle cx={x} cy={y} r={d/2- cutsize*2}
+                   stroke="black" fill="none" strokeWidth="2" />
+           <line x2={cx_si} y1={cy_si} x1={cx_ei} y2={cy_ei} stroke="black" strokeWidth="1" />
          </g>
        );
     }
+    Axis(){
+      let i = this.getStateObj();
 
-    drawText(){
-      let hoge = [];
-      let txtoffset =9 / 2;
-      for(let i = 2;i < this.state.x-2; i++){
-        hoge.push({x : i*this.state.xs + this.state.xs/2, y :(this.state.y-1)*this.state.ys + this.state.ys/2 + txtoffset, value:i-1});
+      let dst = [];
+
+
+      let fontsize = 9,
+          offset_xAxis = fontsize * 1.5,
+          offset_yAxis = fontsize * -1,
+          Inversion = this.state.Setting.ArixInversion,
+          Origin = this.state.Setting.ArixOrigin;
+      let ArrowOffset = 4.5;
+
+      for(let n = 0;n < i.ShotsNum.X; n++){
+        dst.push({
+          x : i.margin.Left + (n + i.disChip.Left)*(i.ShotSize.X) + i.ShotSize.X/2,
+          y : i.fully - i.margin.Bottom + offset_xAxis,
+          value : (Inversion.X ? i.ShotsNum.X - 1 - (n + Origin.X) : n + Origin.X)
+        });
       }
-      for(let i = 2;i < this.state.y-2; i++){
-        hoge.push({x : this.state.xs/2, y : i*this.state.ys + this.state.ys/2 + txtoffset, value:i-1});
+      for(let n = 0;n < i.ShotsNum.Y; n++){
+        dst.push({
+          x : i.margin.Left + offset_yAxis,
+          y : i.margin.Top + (n+i.disChip.Top)*i.ShotSize.Y + i.ShotSize.Y/2,
+          value : (Inversion.Y ? i.ShotsNum.Y - 1 - (n + Origin.Y) : n + Origin.Y)
+        });
       }
-      let n = hoge.map((i)=><text x={i.x} y={i.y} textAnchor="middle" fontSize="9">{i.value}</text>);
+      let texts = dst.map((n)=><text x={n.x} y={n.y} textAnchor="middle" fontSize={fontsize}>{n.value}</text>);
 
       return(
         <g>
-        <marker id="m_atr" markerUnits="strokeWidth" markerWidth="3" markerHeight="3"
+          <marker id="m_atr" markerUnits="strokeWidth" markerWidth="3" markerHeight="3"
                 viewBox="0 0 10 10" refX="5" refY="5" orient="auto-start-reverse">
-          <polygon points="0,0 5,5 0,10 10,5" fill="red"/>
-        </marker>
-          {n}
-          <text x={(this.state.x - 0.8)*this.state.xs} y={ this.state.y*this.state.ys/2} font-size="6">X</text>
-          <line x1={this.state.xs * 0.8} y1={this.state.y*this.state.ys/2}
-                x2={(this.state.x - 0.8)*this.state.xs} y2={this.state.y*this.state.ys/2}
-                stroke="red" strokeWidth="2" markerEnd="url(#m_atr)" />
-
-          <text x={this.state.x*this.state.xs/2} y={this.state.ys * 0.8} font-size="6">Y</text>
-          <line x1={this.state.x*this.state.xs/2} y1={this.state.ys * 0.8}
-                x2={this.state.x*this.state.xs/2} y2={(this.state.y - 0.8)*this.state.ys}
-                stroke="red" strokeWidth="2" markerEnd="url(#m_atr)" />
+            <polygon points="0,0 5,5 0,10 10,5" fill="red"/>
+          </marker>
+          {texts}
+          <text x={i.margin.Left+i.w+ArrowOffset} y={i.cy}
+                fontSize={fontsize} fontWeight="bold">X</text>
+          <line x1={i.margin.Left-ArrowOffset} x2={i.margin.Left+i.w+ArrowOffset}
+                y1={i.cy} y2={i.cy}
+                stroke="red" strokeWidth="1" markerEnd="url(#m_atr)" />
+          <text x={i.cx} y={i.margin.Top+i.h+ArrowOffset}
+                fontSize={fontsize} fontWeight="bold">Y</text>
+          <line x1={i.cx} x2={i.cx}
+                y1={i.margin.Top-ArrowOffset} y2={i.margin.Top+i.h+ArrowOffset}
+                stroke="red" strokeWidth="1" markerEnd="url(#m_atr)" />
         </g>
       );
     }
-
     drawValue(){
-      let hoge = [];
       let txtoffset = 9 / 2;
-      for(let y = 2;y < this.state.y-2; y++){
-        for(let x = 2;x < this.state.x-2; x++){
-          hoge.push({
-            x     : x*this.state.xs + this.state.xs/2,
-            y     : y*this.state.ys + this.state.ys/2 + txtoffset,
-            value : `${x}-${y}`
-          });
-        }
-      }
-      let n = hoge.map((i)=><text x={i.x} y={i.y} textAnchor="middle" fontSize="9">{i.value}</text>);
-
+      let i = this.getStateObj();
+      let dst = this.state.Values.map((n)=>{
+        console.log(n);
+        let ox = i.margin.Left + i.ShotSize.X/2,
+            oy = i.margin.Top + i.ShotSize.Y/2 + txtoffset;
+        return(
+          <text x={ox + (n.X + i.disChip.Left) * i.ShotSize.X}
+                y={oy + (n.Y + i.disChip.Top) * i.ShotSize.Y}
+                textAnchor="middle"
+                fontSize="9">{n.Value}</text>
+        );
+      });
       return(
-        <g>
-          {n}
-        </g>
+        <g>{dst}</g>
       );
     }
     render() {
+      if(this.state.Setting == null) return <p>ERR</p>;
+      let i = this.getStateObj();
       return (
-        <svg viewBox={this.state.viewbox} width={this.state.width}>
-          {this.drawBackGround()}
-          {this.drawWfNotch()}
+        <svg viewBox={`0 0 ${i.fullx} ${i.fully}`} width={this.state.width}>
+          {this.Grid()}
+          {this.WfExternal()}
+          {this.Axis()}
+          {this.drawValue()}
         </svg>
       );
     }
   }
-/*
-
-
-{this.drawText()}
-{this.drawValue()}
-
-*/
 
   /*App*/
 
