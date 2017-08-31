@@ -10,7 +10,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-bootstrap/0.31.2/react-bootstrap.min.js"></script>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/3.4.2/js-yaml.min.js"></script>
-<script src="https://cdn.jsdelivr.net/jsbarcode/3.5.8/barcodes/JsBarcode.code128.min.js"></script>
+<script src="https://cdn.jsdelivr.net/jsbarcode/3.5.8/JsBarcode.all.min.js"></script>
 
 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/latest/css/bootstrap.min.css">
 <style type="text/css">
@@ -41,7 +41,8 @@
     title : "Directions",
     subtitle : "(draft)",
     detail : [
-    {type : "barcode", value : "A012345"},
+    {type : "code39", value : "A012345"},
+    {type : "code128", value : "A012345"},
     {type : "condition", title : "DateTime", value : "2017-08-29"},
     {type : "br"},
     {type : "condition", title : "CompanyName", value : "MyCompany"},
@@ -143,20 +144,47 @@
 
   class TableBarcode extends React.Component {
     constructor(props) {
-      super(props)
+      super(props);
+      this.state={
+        type  : this.props.type,
+        value : this.props.value
+      }
     }
     componentDidMount(){
-      JsBarcode("#canvasBarCode", this.props.value, {
-        width: 1,
-        height:40,
-        fontSize: 12,
-        textMargin : 2
-      });
+      this.redraw(this.props);
+    }
+    componentWillReceiveProps(nextProps) {
+      this.redraw(nextProps);
+    }
+    redraw(obj){
+      try{
+        JsBarcode(ReactDOM.findDOMNode(this.refs.canvasBarCode),
+          obj.value,
+          {
+            width: 1,
+            height:40,
+            fontSize: 12,
+            textMargin : 2,
+            format: obj.type
+          }
+        );
+      }catch(e){
+        JsBarcode(ReactDOM.findDOMNode(this.refs.canvasBarCode),
+          null,
+          {
+            width: 1,
+            height:40,
+            fontSize: 12,
+            textMargin : 2,
+            format: obj.type
+          }
+        );
+      }
     }
     render() {
       return (
         <div>
-          <svg  id="canvasBarCode"></svg >
+          <svg ref="canvasBarCode" />
         </div>
       );
     }
@@ -277,8 +305,10 @@
                      <h4>{i.title}</h4>
                        {i.value}
                     </Alert>);
-          case "barcode":
-            return (<TableBarcode value={i.value}/>);
+          case "code39":
+            return (<TableBarcode type="CODE39" value={i.value}/>);
+          case "code128":
+            return (<TableBarcode type="CODE128" value={i.value}/>);
           default:
             return "";
         }
