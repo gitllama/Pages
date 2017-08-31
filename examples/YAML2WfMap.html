@@ -2,8 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Table_RealTimeRender</title>
-  <meta name="description"　content="ページのキーワード">
+  <title>Yaml 2 SVG WfMap</title>
 </head>
 <script src="https://unpkg.com/react@15.6.1/dist/react.min.js"></script>
 <script src="https://unpkg.com/react-dom@15.6.1/dist/react-dom.min.js"></script>
@@ -11,7 +10,8 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-bootstrap/0.31.2/react-bootstrap.min.js"></script>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/3.4.2/js-yaml.min.js"></script>
-<script src="https://cdn.jsdelivr.net/jsbarcode/3.5.8/barcodes/JsBarcode.code128.min.js"></script>
+
+<script src="wf.js"></script>
 
 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/latest/css/bootstrap.min.css">
 <style type="text/css">
@@ -22,7 +22,7 @@
 @media print {
   body {
     width: 210mm; /* needed for Chrome */
-    height: 296mm; /* 1mm�]�T���������� */
+    height: 296mm; /* 1mm margin */
   }
   #nonprint {
     display: none;
@@ -39,7 +39,7 @@
   {
     Setting : {
       WfSize : 200,
-      ShotsNum : {X:10,Y:7},
+      ShotsNum : { X:10, Y:7 },
       ShotSize : {X:17.2,Y:24.8},
       Chips : 54,
       Notch : 90,
@@ -101,7 +101,6 @@
       );
     }
   }
-
 
   /*Output*/
 
@@ -217,9 +216,6 @@
     Axis(){
       let i = this.getStateObj();
 
-      let dst = [];
-
-
       let fontsize = 9,
           offset_xAxis = fontsize * 1.5,
           offset_yAxis = fontsize * -1,
@@ -227,6 +223,7 @@
           Origin = this.state.Setting.ArixOrigin;
       let ArrowOffset = 4.5;
 
+      let dst = [];
       for(let n = 0;n < i.ShotsNum.X; n++){
         dst.push({
           x : i.margin.Left + (n + i.disChip.Left)*(i.ShotSize.X) + i.ShotSize.X/2,
@@ -242,24 +239,19 @@
         });
       }
       let texts = dst.map((n)=><text x={n.x} y={n.y} textAnchor="middle" fontSize={fontsize}>{n.value}</text>);
-
+      let lines = [
+        {x1:i.margin.Left-ArrowOffset,x2:i.margin.Left+i.w+ArrowOffset,y1:i.cy,y2:i.cy,val:"X"},
+        {x1:i.cx,x2:i.cx,y1:i.margin.Top-ArrowOffset,y2:i.margin.Top+i.h+ArrowOffset,val:"Y"}
+      ];
       return(
         <g>
-          <marker id="m_atr" markerUnits="strokeWidth" markerWidth="3" markerHeight="3"
+          <marker id="m_atr" markerUnits="strokeWidth" markerWidth="6" markerHeight="6"
                 viewBox="0 0 10 10" refX="5" refY="5" orient="auto-start-reverse">
             <polygon points="0,0 5,5 0,10 10,5" fill="red"/>
           </marker>
           {texts}
-          <text x={i.margin.Left+i.w+ArrowOffset} y={i.cy}
-                fontSize={fontsize} fontWeight="bold">X</text>
-          <line x1={i.margin.Left-ArrowOffset} x2={i.margin.Left+i.w+ArrowOffset}
-                y1={i.cy} y2={i.cy}
-                stroke="red" strokeWidth="1" markerEnd="url(#m_atr)" />
-          <text x={i.cx} y={i.margin.Top+i.h+ArrowOffset}
-                fontSize={fontsize} fontWeight="bold">Y</text>
-          <line x1={i.cx} x2={i.cx}
-                y1={i.margin.Top-ArrowOffset} y2={i.margin.Top+i.h+ArrowOffset}
-                stroke="red" strokeWidth="1" markerEnd="url(#m_atr)" />
+          {lines.map((n)=><text x={n.x2} y={n.y2} fontSize={fontsize} fontWeight="bold">{n.val}</text>)}
+          {lines.map((n)=><line x1={n.x1} x2={n.x2} y1={n.y1} y2={n.y2} stroke="red" strokeWidth="1" markerEnd="url(#m_atr)" />)}
         </g>
       );
     }
@@ -285,7 +277,7 @@
       if(this.state.Setting == null) return <p>ERR</p>;
       let i = this.getStateObj();
       return (
-        <svg viewBox={`0 0 ${i.fullx} ${i.fully}`} width={this.state.width}>
+        <svg viewBox={`0 0 ${i.fullx} ${i.fully}`} width={this.props.width}>
           {this.Grid()}
           {this.WfExternal()}
           {this.Axis()}
@@ -306,6 +298,8 @@
     }
     componentDidMount(){
       this.setState({value : value});
+      console.log(ReactDOM.findDOMNode(this.refs.boxsss))
+      wfff(ReactDOM.findDOMNode(this.refs.boxsss));
     }
     onChange(e){
       this.setState({value : e.value});
@@ -319,8 +313,9 @@
             <h3>View</h3>
           </div>
           <section style={{pageBreakAfter : 'always'}}>
-            <Wfmap src={this.state.value}/>
+            <Wfmap width={400} src={this.state.value}/>
           </section>
+          <svg xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 400  400" ref="boxsss"></svg>
         </div>
       );
     }
