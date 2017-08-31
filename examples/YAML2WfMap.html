@@ -298,8 +298,9 @@
     }
     componentDidMount(){
       this.setState({value : value});
-      console.log(ReactDOM.findDOMNode(this.refs.boxsss))
-      wfff(ReactDOM.findDOMNode(this.refs.boxsss));
+
+      let h = new WfRender(ReactDOM.findDOMNode(this.refs.boxsss));
+      h.grid();
     }
     onChange(e){
       this.setState({value : e.value});
