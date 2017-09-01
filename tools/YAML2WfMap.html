@@ -4,13 +4,14 @@
   <meta charset="UTF-8">
   <title>Yaml 2 SVG WfMap</title>
 </head>
+<script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
 <script src="https://unpkg.com/react@15.6.1/dist/react.min.js"></script>
 <script src="https://unpkg.com/react-dom@15.6.1/dist/react-dom.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.38/browser.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-bootstrap/0.31.2/react-bootstrap.min.js"></script>
-
 <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/3.4.2/js-yaml.min.js"></script>
-<script src="wf.js"></script>
+
+<script src="jwfmap.js"></script>
 
 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/latest/css/bootstrap.min.css">
 <style type="text/css">
@@ -33,25 +34,6 @@
   <div id="app"></div>
   <script type="text/babel">
 
-  const settingjson = JSON.stringify(
-  {
-    WfSize : 200,
-    ShotsNum : { X:10, Y:7 },
-    ShotSize : {X:17.2, Y:24.8},
-    Chips : 54,
-    Notch : 90,
-    Edgecut : 5,
-    Notchcut: 9,
-    ArixOrigin:{X:0,Y:0},
-    ArixInversion:{X:false,Y:false}
-  });
-  const valuesjson = JSON.stringify(
-  [
-      { X: 2, Y: 2, Value:10},
-      { X: 2, Y: 3, Value:9}
-  ]);
-
-
   let {
     Button,FormGroup,FormControl,
     PageHeader, FieldGroup,
@@ -59,20 +41,28 @@
     Panel, Label, Alert
   } = window.ReactBootstrap;
 
-
   /*Input*/
 
   class InputApp extends React.Component {
     constructor(props) {
       super(props);
-
-      this.defaultset = jsyaml.dump(JSON.parse(this.props.defaultValue.setting));
-      this.defaultval = jsyaml.dump(JSON.parse(this.props.defaultValue.values));
+      this.state= {
+        set : null,
+        val : null
+      }
     }
     propTypes: {
       onChange: React.PropTypes.func.isRequired
     }
-    onChange(){
+    componentWillReceiveProps(nextProps) {
+      if(this.props.defaultSet != nextProps.defaultSet){
+        this.setState({
+          set: nextProps.defaultSet
+        });
+      }
+    }
+    onChangeField() {
+      //this.setState({ [e.target.name]: e.target.value });
       try{
         let dsts = JSON.stringify(jsyaml.load(ReactDOM.findDOMNode(this.refs.setting).value));
         let dstv = JSON.stringify(jsyaml.load(ReactDOM.findDOMNode(this.refs.values).value));
@@ -81,7 +71,7 @@
           values : dstv
         });
       }
-      catch(e){
+      catch(ex){
         this.props.onChange({
           setting : null,
           values : null
@@ -97,8 +87,8 @@
                          placeholder="textarea"
                          ref="setting"
                          style={{height:"300px"}}
-                         defaultValue={this.defaultset}
-                         onChange={this.onChange.bind(this)}/>
+                         value={this.state.set}
+                         onChange={this.onChangeField.bind(this)}/>
             </FormGroup>
             <h3>Values(Yaml)</h3>
             <FormGroup controlId="formControlsTextarea">
@@ -106,8 +96,8 @@
                            placeholder="textarea"
                            ref="values"
                            style={{height:"300px"}}
-                           defaultValue={this.defaultval}
-                           onChange={this.onChange.bind(this)}/>
+                           value={this.state.val}
+                           onChange={this.onChangeField.bind(this)}/>
               </FormGroup>
             </div>
       );
@@ -123,8 +113,8 @@
     componentWillReceiveProps(nextProps) {
       console.log("redraw")
       try{
-        let h = new WfRender(JSON.parse(nextProps.setting));
-        var i = h.getstr(JSON.parse(nextProps.values), 3);
+        let h = new jwfmap(JSON.parse(nextProps.setting));
+        var i = h.getstr(JSON.parse(nextProps.values));
         ReactDOM.findDOMNode(this.refs.wfmap).innerHTML = i;
       }catch(e){
         ReactDOM.findDOMNode(this.refs.wfmap).innerHTML = e;
@@ -144,13 +134,17 @@
       super(props);
       this.state={
         setting : null,
-        values : null
+        values : null,
+        text : null
       };
     }
     componentDidMount(){
-      this.setState({
-        setting : settingjson,
-        values : valuesjson
+      $.get("defaultwf.yaml",(data)=>{
+        //JSON.stringify(
+        //this.defaultset = jsyaml.safeDump(JSON.parse(this.props.defaultValue.setting));
+        this.setState({
+          text : data
+        })
       });
     }
     onChange(e){
@@ -164,10 +158,7 @@
         <div>
           <div id="nonprint" style={{padding:'20px'}}>
             <InputApp
-              defaultValue={{
-                setting : settingjson,
-                values : valuesjson
-              }}
+              defaultSet={this.state.text}
               onChange={this.onChange.bind(this)} />
             <h3>View</h3>
           </div>

@@ -1,10 +1,12 @@
-/*Draw Wf Map by JavaScript*/
+/* Draw Wf Map by JavaScript
+*  jwfmap.js
+*
+* TEXT generation is faster than
+*  DOM (createElementNS/createElement and setAttribute)
+*/
 
-// TEXT generation is faster than DOM (createElementNS/createElement and setAttribute)
-//
-
-class WfRender{
-  constructor(setting,values) {
+class jwfmap{
+  constructor(setting) {
     const supplement = (val, default_val)=> val === undefined ? default_val : val;
 
     this.WfSize = supplement(setting.WfSize, 200);
@@ -16,6 +18,8 @@ class WfRender{
     this.Notchcut = supplement(setting.Notchcut,9);
     this.ArixOrigin = supplement(setting.ArixOrigin,{X:0,Y:0});
     this.ArixInversion = supplement(setting.ArixInversion,{X:false,Y:false});
+
+    this.EnableChips = setting.EnableChips;
 
     this.Margin =  supplement(setting.Margin,{ Top:20,Bottom:20, Left:20,Right:20});
     this.DisableChip =  supplement(setting.DisableChip,{ Top: 1,Bottom: 1, Left :1, Right:1});
@@ -31,18 +35,20 @@ class WfRender{
 
   getstr(vals, scale){
     var tags = [];
-    tags.push(`<svg xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 ${this.FullWidth} ${this.FullHeight}" width=${this.FullWidth * scale}>`);
+    if(scale != null){
+      tags.push(`<svg xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 ${this.FullWidth} ${this.FullHeight}" width=${this.FullWidth * scale}>`);
+    }else{
+      tags.push(`<svg xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 ${this.FullWidth} ${this.FullHeight}">`);
+    }
 
     tags.push('<defs>');
-    tags.push(`<marker id="atr" markerUnits="strokeWidth" markerWidth="6" markerHeight="6" viewBox="0 0 10 10" refX="5" refY="5" orient="auto-start-reverse"`);
+    tags.push(`<marker id="atr" markerUnits="strokeWidth" markerWidth="6" markerHeight="6" viewBox="0 0 10 10" refX="5" refY="5" orient="auto-start-reverse">`);
     tags.push(`<polygon points="0,0 5,5 0,10 10,5" fill="red"/>`);
     tags.push(`</marker>`);
     tags.push('</defs>');
 
-
-    tags.push(this.drawValue([{X:-1, Y:-1, Value:"NaN"}]));
-
-    tags.push(this.grid());
+    tags.push(this.wfenable());
+    tags.push(this.wfgrid());
     tags.push(this.wfexternal());
     tags.push(this.wfaxis());
     tags.push(this.drawValue(vals));
@@ -52,7 +58,7 @@ class WfRender{
     //element.innerHTML = tags.join('');
   }
 
-  grid() {
+  wfgrid() {
     const line =(x1,x2,y1,y2)=> `<line x1=${x1} x2=${x2} y1=${y1} y2=${y2} stroke="lightgray" stroke-width="1" />`;
     const rect =(x1,y1,w,h)=> `<rect x=${x1} y=${y1} width=${w} height=${h} stroke="black" fill="none" stroke-width="2" />`;
 
@@ -146,6 +152,25 @@ class WfRender{
         this.Margin.Top + (n + this.DisableChip.Top) * this.ShotSize.Y + this.ShotSize.Y/2,
         (this.ArixInversion.Y ? this.ShotsNum.Y - 1 - (n - this.ArixOrigin.Y) : n + this.ArixOrigin.Y)
       ));
+    }
+    tags.push('</g>');
+    return tags;
+  }
+
+  wfenable(){
+    const rect =(x,y)=> `<rect x=${x} y=${y} width=${this.ShotSize.X} height=${this.ShotSize.Y} fill="gray" />`;
+
+    let ox = this.Margin.Left + this.DisableChip.Left * this.ShotSize.X,
+        oy = this.Margin.Top + this.DisableChip.Top * this.ShotSize.Y;
+
+    let tags = [];
+    tags.push('<g>');
+    for(let y = -this.DisableChip.Top; y < this.DisableChip.Bottom + this.ShotsNum.Y; y++){
+      for(let x = -this.DisableChip.Left; x < this.DisableChip.Right + this.ShotsNum.X; x++){
+        if(!this.EnableChips.some((e)=> e.X == x && e.Y ==y)){
+          tags.push(rect(ox + x * this.ShotSize.X, oy + y * this.ShotSize.Y));
+        }
+      }
     }
     tags.push('</g>');
     return tags;
