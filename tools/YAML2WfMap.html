@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Yaml 2 SVG WfMap</title>
+</head>
+<script src="https://unpkg.com/react@15.6.1/dist/react.min.js"></script>
+<script src="https://unpkg.com/react-dom@15.6.1/dist/react-dom.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.38/browser.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-bootstrap/0.31.2/react-bootstrap.min.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/3.4.2/js-yaml.min.js"></script>
+<script src="wf.js"></script>
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/latest/css/bootstrap.min.css">
+<style type="text/css">
+@page {
+  size: A4;
+  margin: 0;
+}
+@media print {
+  body {
+    width: 210mm; /* needed for Chrome */
+    height: 296mm; /* 1mm margin */
+  }
+  #nonprint {
+    display: none;
+  }
+}
+</style>
+
+<body>
+  <div id="app"></div>
+  <script type="text/babel">
+
+  const settingjson = JSON.stringify(
+  {
+    WfSize : 200,
+    ShotsNum : { X:10, Y:7 },
+    ShotSize : {X:17.2, Y:24.8},
+    Chips : 54,
+    Notch : 90,
+    Edgecut : 5,
+    Notchcut: 9,
+    ArixOrigin:{X:0,Y:0},
+    ArixInversion:{X:false,Y:false}
+  });
+  const valuesjson = JSON.stringify(
+  [
+      { X: 2, Y: 2, Value:10},
+      { X: 2, Y: 3, Value:9}
+  ]);
+
+
+  let {
+    Button,FormGroup,FormControl,
+    PageHeader, FieldGroup,
+    Grid, Row, Col, Jumbotron, Table,
+    Panel, Label, Alert
+  } = window.ReactBootstrap;
+
+
+  /*Input*/
+
+  class InputApp extends React.Component {
+    constructor(props) {
+      super(props);
+
+      this.defaultset = jsyaml.dump(JSON.parse(this.props.defaultValue.setting));
+      this.defaultval = jsyaml.dump(JSON.parse(this.props.defaultValue.values));
+    }
+    propTypes: {
+      onChange: React.PropTypes.func.isRequired
+    }
+    onChange(){
+      try{
+        let dsts = JSON.stringify(jsyaml.load(ReactDOM.findDOMNode(this.refs.setting).value));
+        let dstv = JSON.stringify(jsyaml.load(ReactDOM.findDOMNode(this.refs.values).value));
+        this.props.onChange({
+          setting : dsts,
+          values : dstv
+        });
+      }
+      catch(e){
+        this.props.onChange({
+          setting : null,
+          values : null
+        });
+      }
+    }
+    render() {
+      return (
+        <div>
+          <h3>Setting(Yaml)</h3>
+          <FormGroup controlId="formControlsTextarea">
+            <FormControl componentClass="textarea"
+                         placeholder="textarea"
+                         ref="setting"
+                         style={{height:"300px"}}
+                         defaultValue={this.defaultset}
+                         onChange={this.onChange.bind(this)}/>
+            </FormGroup>
+            <h3>Values(Yaml)</h3>
+            <FormGroup controlId="formControlsTextarea">
+              <FormControl componentClass="textarea"
+                           placeholder="textarea"
+                           ref="values"
+                           style={{height:"300px"}}
+                           defaultValue={this.defaultval}
+                           onChange={this.onChange.bind(this)}/>
+              </FormGroup>
+            </div>
+      );
+    }
+  }
+
+  /*Output*/
+
+  class WfmapByJS extends React.Component {
+    constructor(props) {
+      super(props);
+    }
+    componentWillReceiveProps(nextProps) {
+      console.log("redraw")
+      try{
+        let h = new WfRender(JSON.parse(nextProps.setting));
+        var i = h.getstr(JSON.parse(nextProps.values), 3);
+        ReactDOM.findDOMNode(this.refs.wfmap).innerHTML = i;
+      }catch(e){
+        ReactDOM.findDOMNode(this.refs.wfmap).innerHTML = e;
+      }
+    }
+    render() {
+      return (
+        <div ref="wfmap">dummy</div>
+      );
+    }
+  }
+
+  /*App*/
+
+  class App extends React.Component {
+    constructor(props) {
+      super(props);
+      this.state={
+        setting : null,
+        values : null
+      };
+    }
+    componentDidMount(){
+      this.setState({
+        setting : settingjson,
+        values : valuesjson
+      });
+    }
+    onChange(e){
+      this.setState({
+        setting : e.setting,
+        values : e.values
+      });
+    }
+    render() {
+      return (
+        <div>
+          <div id="nonprint" style={{padding:'20px'}}>
+            <InputApp
+              defaultValue={{
+                setting : settingjson,
+                values : valuesjson
+              }}
+              onChange={this.onChange.bind(this)} />
+            <h3>View</h3>
+          </div>
+          <section style={{pageBreakAfter : 'always'}}>
+            <WfmapByJS setting={this.state.setting} values={this.state.values}/>
+          </section>
+        </div>
+      );
+    }
+  }
+
+  ReactDOM.render(<App />, document.querySelector('#app'));
+
+  </script>
+</body>
+</html>
