@@ -104,7 +104,7 @@
 
   /*Output*/
 
-  class Wfmap extends React.Component {
+  class WfmapByReact extends React.Component {
     constructor(props) {
       super(props);
       this.state={
@@ -287,23 +287,47 @@
     }
   }
 
+  class WfmapByJS extends React.Component {
+    constructor(props) {
+      super(props);
+    }
+    componentWillReceiveProps(nextProps) {
+      try{
+        console.log("a");
+        let h = new WfRender(null);
+        let hoge = JSON.parse(nextProps.src);
+        var i = h.getstr(hoge.Setting.Notch);
+        ReactDOM.findDOMNode(this.refs.aaa).innerHTML = i;
+      }catch(e){
+
+      }
+    }
+    render() {
+      return (
+        <div ref="aaa"></div>
+      );
+    }
+  }
+
   /*App*/
 
   class App extends React.Component {
     constructor(props) {
       super(props);
       this.state={
-        value : null
+        value : null,
+        svg : ""
       };
     }
     componentDidMount(){
-      this.setState({value : value});
-
-      let h = new WfRender(ReactDOM.findDOMNode(this.refs.boxsss));
-      h.grid();
+      this.setState({
+        value : value
+      });
     }
     onChange(e){
-      this.setState({value : e.value});
+      this.setState({
+        value : e.value
+      });
     }
     render() {
       return (
@@ -314,9 +338,9 @@
             <h3>View</h3>
           </div>
           <section style={{pageBreakAfter : 'always'}}>
-            <Wfmap width={400} src={this.state.value}/>
+            <WfmapByReact width={400} src={this.state.value}/>
+            <WfmapByJS src={this.state.value}/>
           </section>
-          <svg xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 400  400" ref="boxsss"></svg>
         </div>
       );
     }
