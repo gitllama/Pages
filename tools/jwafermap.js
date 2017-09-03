@@ -1,12 +1,14 @@
 /* Draw Wf Map by JavaScript
-*  jwfmap.js
+*  jwafermap.js
 *
 * TEXT generation is faster than
 *  DOM (createElementNS/createElement and setAttribute)
 */
 
-class jwfmap{
+class jwafermap{
   constructor(setting) {
+    if(setting == null) setting = { };
+
     const supplement = (val, default_val)=> val === undefined ? default_val : val;
 
     this.WfSize = supplement(setting.WfSize, 200);
@@ -18,6 +20,8 @@ class jwfmap{
     this.Notchcut = supplement(setting.Notchcut,9);
     this.ArixOrigin = supplement(setting.ArixOrigin,{X:0,Y:0});
     this.ArixInversion = supplement(setting.ArixInversion,{X:false,Y:false});
+
+    this.Mark = supplement(setting.Mark,"null");
 
     this.EnableChips = setting.EnableChips;
 
@@ -34,7 +38,9 @@ class jwfmap{
   }
 
   getstr(vals, scale){
-    var tags = [];
+    console.log(vals);
+
+    let tags = [];
     if(scale != null){
       tags.push(`<svg xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 ${this.FullWidth} ${this.FullHeight}" width=${this.FullWidth * scale}>`);
     }else{
@@ -51,7 +57,10 @@ class jwfmap{
     tags.push(this.wfgrid());
     tags.push(this.wfexternal());
     tags.push(this.wfaxis());
-    tags.push(this.drawValue(vals));
+    tags.push(this.wfsummary());
+
+    if(vals != null)
+      tags.push(this.drawValue(vals));
 
     tags.push('</svg>');
     return tags.join('');
@@ -153,6 +162,26 @@ class jwfmap{
         (this.ArixInversion.Y ? this.ShotsNum.Y - 1 - (n - this.ArixOrigin.Y) : n + this.ArixOrigin.Y)
       ));
     }
+    tags.push('</g>');
+    return tags;
+  }
+  wfsummary(){
+    const mark =(x,y,text)=>
+        `<text x=${x} y=${y} text-anchor="left" font-size="9">${text}</text>`;
+
+    let fontsize = 9,
+        offset_xAxis = fontsize * 1.5,
+        offset_yAxis = fontsize * -1,
+        ArrowOffset = 4.5;
+
+    let tags = [];
+    tags.push('<g>');
+
+    tags.push(mark(
+      this.Margin.Left,
+      this.FullHeight - this.Margin.Bottom +9 ,
+      "Mark : A012345-00"
+    ));
     tags.push('</g>');
     return tags;
   }

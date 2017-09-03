@@ -4,6 +4,9 @@
   <meta charset="UTF-8">
   <title>Yaml 2 SVG WfMap</title>
 </head>
+
+<script src="https://www.gstatic.com/charts/loader.js"></script>
+
 <script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
 <script src="https://unpkg.com/react@15.6.1/dist/react.min.js"></script>
 <script src="https://unpkg.com/react-dom@15.6.1/dist/react-dom.min.js"></script>
@@ -11,7 +14,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-bootstrap/0.31.2/react-bootstrap.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/3.4.2/js-yaml.min.js"></script>
 
-<script src="jwfmap.js"></script>
+<script src="jwafermap.js"></script>
 
 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/latest/css/bootstrap.min.css">
 <style type="text/css">
@@ -43,63 +46,45 @@
 
   /*Input*/
 
-  class InputApp extends React.Component {
+  // shouldComponentUpdate(nextProps, nextState) {
+  //   return (this.state.text === nextState.text);
+  // }
+
+  /*Chart*/
+
+  class WfChart extends React.Component {
     constructor(props) {
       super(props);
-      this.state= {
-        set : null,
-        val : null
-      }
-    }
-    propTypes: {
-      onChange: React.PropTypes.func.isRequired
     }
     componentWillReceiveProps(nextProps) {
-      if(this.props.defaultSet != nextProps.defaultSet){
-        this.setState({
-          set: nextProps.defaultSet
-        });
-      }
-    }
-    onChangeField() {
-      //this.setState({ [e.target.name]: e.target.value });
-      try{
-        let dsts = JSON.stringify(jsyaml.load(ReactDOM.findDOMNode(this.refs.setting).value));
-        let dstv = JSON.stringify(jsyaml.load(ReactDOM.findDOMNode(this.refs.values).value));
-        this.props.onChange({
-          setting : dsts,
-          values : dstv
-        });
-      }
-      catch(ex){
-        this.props.onChange({
-          setting : null,
-          values : null
-        });
-      }
+      google.charts.load('current', {packages: ['corechart']});
+      google.charts.setOnLoadCallback(()=>{
+        var data = google.visualization.arrayToDataTable([
+          ['月', '数量'],
+          ['１月', 65],
+          ['２月', 59],
+          ['３月', 80],
+          ['４月', 81],
+          ['５月', 56],
+          ['６月', 55],
+          ['７月', 48]
+        ]);
+
+        var stage = document.getElementById('stage');
+        var chart = new google.visualization.ColumnChart(stage);
+        chart.draw(
+          data,
+          {
+            'title': 'サンプルチャート',
+            'width': 400,
+            'height': 400
+          }
+        );
+      });
     }
     render() {
       return (
-        <div>
-          <h3>Setting(Yaml)</h3>
-          <FormGroup controlId="formControlsTextarea">
-            <FormControl componentClass="textarea"
-                         placeholder="textarea"
-                         ref="setting"
-                         style={{height:"300px"}}
-                         value={this.state.set}
-                         onChange={this.onChangeField.bind(this)}/>
-            </FormGroup>
-            <h3>Values(Yaml)</h3>
-            <FormGroup controlId="formControlsTextarea">
-              <FormControl componentClass="textarea"
-                           placeholder="textarea"
-                           ref="values"
-                           style={{height:"300px"}}
-                           value={this.state.val}
-                           onChange={this.onChangeField.bind(this)}/>
-              </FormGroup>
-            </div>
+        <div id="stage">dummy</div>
       );
     }
   }
@@ -111,13 +96,26 @@
       super(props);
     }
     componentWillReceiveProps(nextProps) {
-      console.log("redraw")
+      let ex;
       try{
-        let h = new jwfmap(JSON.parse(nextProps.setting));
-        var i = h.getstr(JSON.parse(nextProps.values));
-        ReactDOM.findDOMNode(this.refs.wfmap).innerHTML = i;
+        ex = "JSON.parse1, ";
+        let h = nextProps.setting != null
+              ? JSON.parse(nextProps.setting)
+              : null;
+        ex = "JSON.parse2, ";
+        let i = nextProps.values != null
+              ? JSON.parse(nextProps.values)
+              : null;
+
+        ex = "jwafermap, ";
+        let hh = (new jwafermap(h));
+
+        ex = "jwafermap2, ";
+        ReactDOM.findDOMNode(this.refs.wfmap).innerHTML
+          = hh.getstr(i, 1);
       }catch(e){
-        ReactDOM.findDOMNode(this.refs.wfmap).innerHTML = e;
+        console.log(e);
+        ReactDOM.findDOMNode(this.refs.wfmap).innerHTML = ex + e;
       }
     }
     render() {
@@ -133,37 +131,81 @@
     constructor(props) {
       super(props);
       this.state={
+        set : "",
+        val : "",
         setting : null,
-        values : null,
-        text : null
+        values : null
       };
+
     }
     componentDidMount(){
       $.get("defaultwf.yaml",(data)=>{
         //JSON.stringify(
         //this.defaultset = jsyaml.safeDump(JSON.parse(this.props.defaultValue.setting));
         this.setState({
-          text : data
-        })
+          set : data,
+          setting : JSON.stringify(jsyaml.load(data)),
+          values : JSON.stringify(jsyaml.load(ReactDOM.findDOMNode(this.refs.values).value))
+        });
       });
     }
-    onChange(e){
+    onChangeField() {
+      //this.setState({ [e.target.name]: e.target.value });
+      let set = ReactDOM.findDOMNode(this.refs.setting).value,
+          val = ReactDOM.findDOMNode(this.refs.values).value,
+          dsts = null,
+          dstv = null;
+      try{
+        dsts = JSON.stringify(jsyaml.load( set ));
+        dstv = JSON.stringify(jsyaml.load( val ));
+      }
+      catch(ex){
+        dsts = null;
+        dstv = null;
+      }
       this.setState({
-        setting : e.setting,
-        values : e.values
+        set : set,
+        val : val,
+        setting : dsts,
+        values : dstv
       });
     }
     render() {
       return (
-        <div>
-          <div id="nonprint" style={{padding:'20px'}}>
-            <InputApp
-              defaultSet={this.state.text}
-              onChange={this.onChange.bind(this)} />
-            <h3>View</h3>
-          </div>
+        <div id="nonprint" style={{padding:'20px'}}>
+          <h3>Setting(Yaml)</h3>
+          <FormGroup controlId="formControlsTextarea">
+            <FormControl componentClass="textarea"
+                         placeholder="textarea"
+                         ref="setting"
+                         style={{height:"100px"}}
+                         value={this.state.set}
+                         onChange={this.onChangeField.bind(this)}/>
+          </FormGroup>
+          <h3>Values(Yaml)</h3>
+          <FormGroup controlId="formControlsTextarea">
+            <FormControl componentClass="textarea"
+                           placeholder="textarea"
+                           ref="values"
+                           style={{height:"100px"}}
+                           value={this.state.val}
+                           onChange={this.onChangeField.bind(this)}/>
+          </FormGroup>
+          <h3>View</h3>
           <section style={{pageBreakAfter : 'always'}}>
-            <WfmapByJS setting={this.state.setting} values={this.state.values}/>
+            <Grid>
+              <Row className="show-grid">
+                <Col xs={6} md={4}>
+                  <WfmapByJS
+                    setting={this.state.setting}
+                    values={this.state.values}/>
+                </Col>
+                <Col xs={6} md={4}>
+                  <WfChart />
+                </Col>
+              </Row>
+            </Grid>
+
           </section>
         </div>
       );
