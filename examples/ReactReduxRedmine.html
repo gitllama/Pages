@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>ReactReduxRedmine</title>
+</head>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/load.js/1316434407/load-min.js"></script>
+<script src="https://www.gstatic.com/charts/loader.js"></script>
+<script src="https://code.jquery.com/jquery-3.1.1.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/3.4.2/js-yaml.min.js"></script>
+
+<script src="https://unpkg.com/react@15.6.1/dist/react.min.js"></script>
+<script src="https://unpkg.com/react-dom@15.6.1/dist/react-dom.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/redux/3.7.2/redux.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-redux/5.0.6/react-redux.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.38/browser.min.js"></script>
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/latest/css/bootstrap.min.css">
+<style type="text/css">
+  @page {
+    size: A4;
+    margin: 0;
+  }
+  @media print {
+    body {
+      width: 210mm; /* needed for Chrome */
+      height: 296mm; /* 1mm margin */
+    }
+    #nonprint {
+      display: none;
+    }
+  }
+</style>
+
+<body>
+  <div id="app"></div>
+  <script type="text/babel">
+
+  //Action, Action Creators
+
+  const result =(hoge)=> {
+    let text = JSON.stringify(hoge);
+    return { type: 'RESULT', text};
+  }
+  const setcondition =(yaml)=> {
+    console.log(yaml);
+    return { type: 'SETCONDITION', obj : jsyaml.load(yaml)};
+  }
+
+
+  //Reducers
+
+  const initialState = {
+    addr : "192.168.1.xx",
+    ticket : "444",
+    condition : "null"
+  };
+
+  function Reducers(state = initialState, action) {
+    switch (action.type) {
+      case 'RESULT':
+        state.text = action.text;
+        break;
+      case 'SETCONDITION':
+        state.condition = action.obj;
+        console.log(action.obj);
+        break;
+      default:
+        break;
+    }
+    return Object.assign({}, state);
+  }
+
+  var store = Redux.createStore(Reducers);
+
+  //React Component
+
+  const mapStateToProps =(state)=>({  
+      state: state
+  });
+
+  class uWfmap extends React.Component {
+    componentWillReceiveProps(nextProps) {
+      try{
+        ReactDOM.findDOMNode(this.refs.wfmap).innerHTML = nextProps;
+        //load('jprocessdocs.js').thenRun(()=> {
+
+        fetch("/defaultwf.yaml", {redirect: 'manual'})
+        .then(response => response.text())
+        .then(text => {
+           let obj = nextProps.state.condition;
+           let hh = new jwafermap(jsyaml.load(text));
+           ReactDOM.findDOMNode(this.refs.wfmap).innerHTML = hh.getstr(obj, 1);
+        });
+
+          //  let obj = nextProps.state.condition;
+          //  let hh = new jwafermap();
+          //  ReactDOM.findDOMNode(this.refs.wfmap).innerHTML = hh.getstr(obj, 1);
+        //
+        //});
+      }catch(e){
+        console.log(e);
+        ReactDOM.findDOMNode(this.refs.wfmap).innerHTML = e;
+      }
+    }
+    render() {
+      return (
+        <div ref="wfmap">dummy</div>
+      );
+    }
+  }
+  var Wfmap = ReactRedux.connect(mapStateToProps)(uWfmap);
+
+  class uInputComponent extends React.Component {
+    constructor(props) {
+      super(props);
+    }
+    test(){
+      load('jprocessdocs.js').thenRun(()=> {
+         let hogehoge = new RedmineAPI(ReactDOM.findDOMNode(this.refs.addr).value);
+         hogehoge.getTicket(
+           ReactDOM.findDOMNode(this.refs.ticket).value,
+           (json)=>{
+             this.props.dispatch(setcondition(hogehoge.condition));
+             //this.props.dispatch(result(json));
+           }
+         );
+      });
+    }
+    render() {
+      return (
+        <div>
+          <table border="0">
+            <tr>
+              <td>
+                <label>addr :</label>
+              </td>
+              <td>
+                <input type="text" ref="addr" defaultValue={this.props.state.addr} />
+              </td>
+            </tr>
+            <tr>
+              <td>
+                <label>ticket No</label>
+              </td>
+              <td>
+                <input type="text" ref="ticket" defaultValue={this.props.state.ticket} />
+              </td>
+            </tr>
+          </table>
+          <button onClick={this.test.bind(this)}>submit</button>
+        </div>
+      );
+    }
+  }
+  var InputComponent = ReactRedux.connect(mapStateToProps)(uInputComponent);
+
+  class uApp extends React.Component {
+    render() {
+      return (
+        <div>
+          <div id="nonprint" style={{padding:'20px'}}>
+            <h3>Redmine API Test</h3>
+            <InputComponent />
+          </div>
+          <section style={{pageBreakAfter : 'always'}}>
+            <p>{this.props.state.text}</p>
+            <Wfmap />
+          </section>
+        </div>
+      );
+    }
+  }
+  var App = ReactRedux.connect(mapStateToProps)(uApp);
+
+  //Provider, render
+
+  var Provider = ReactRedux.Provider;
+  ReactDOM.render(
+    <Provider store={store}>
+      <App />
+    </Provider>,
+    document.querySelector('#app')
+  );
+
+  </script>
+</body>
+</html>
