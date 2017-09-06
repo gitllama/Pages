@@ -39,15 +39,8 @@
 
   //Action, Action Creators
 
-  const result =(hoge)=> {
-    let text = JSON.stringify(hoge);
-    return { type: 'RESULT', text};
-  }
-  const setcondition =(yaml)=> {
-    console.log(yaml);
-    return { type: 'SETCONDITION', obj : jsyaml.load(yaml)};
-  }
-
+  const result =(json)=> ({ type: 'RESULT', text: JSON.stringify(json)});
+  const setcondition =(yaml)=>  ({  type: 'SETCONDITION', obj : jsyaml.load(yaml)});
 
   //Reducers
 
@@ -149,6 +142,7 @@
               </td>
             </tr>
           </table>
+          <button onClick={this.test.bind(this)}>submit</button>
           <button onClick={this.test.bind(this)}>submit</button>
         </div>
       );
