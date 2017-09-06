@@ -110,6 +110,7 @@
 
   //Store (唯一の状態)
 
+  //Reducersより前に宣言するとinitできてなくてハマる
   var store = Redux.createStore(counter);
   //var store = Redux.createStore(Reducers);
 
