@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>ReactRedux</title>
+</head>
+<script src="https://unpkg.com/react@15.6.1/dist/react.min.js"></script>
+<script src="https://unpkg.com/react-dom@15.6.1/dist/react-dom.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/redux/3.7.2/redux.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-redux/5.0.6/react-redux.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.38/browser.min.js"></script>
+
+<body>
+  <div id="app"></div>
+  <script type="text/babel">
+
+/*
+* 1. Single source of truth(状態の源は１つだけ)
+* 2. State is read-only(状態は読み取り専用)
+* 3. Mutations are written as pure functions(変更はすべて純粋な関数で書かれる)
+*/
+
+  //Action
+  // type, payload(データ), meta(追加データ), error(状態true/falseその他)
+  const INCREMENT = { type: 'INCREMENT' };
+  const DECREMENT = { type: 'DECREMENT' };
+
+  const API = { type: 'API' };
+
+  //Action Creators
+  function incrementA(i) {
+    return { type: 'INCREMENTA', i };
+  }
+  function increment() {
+    return INCREMENT;
+  }
+  function decrement() {
+    return DECREMENT;
+  }
+  function api(hoge) {
+    let text = JSON.stringify(hoge);
+    return { type: 'API', text};
+  }
+
+
+  //Reducers (logicの本体)
+  //分割時はcombineReducersを使用
+  //ただし、combineReducersするとstate内がさらに入れ子になり分割function毎に
+  //objectができるのでSingle sourceと考えるといまいちな気が
+  const initialState = {
+    count : 3,
+    text : "null"
+  };
+
+　//objectだと明示的に更新しないとnotificationたたないので
+　//Object.assignでオブジェクトを無駄に作り直してる
+　//{
+  //    ...state,
+  //    isFetching: true,
+  //  }
+  //みたいな書き方がおしゃれ？
+  function counter(state = initialState, action) {
+    if (typeof state === 'undefined') {
+      return 0
+    }
+    switch (action.type) {
+      case 'INCREMENTA':
+        state.count += action.i;
+        break;
+      case 'INCREMENT':
+        state.count += 1;
+        break;
+      case 'DECREMENT':
+        state.count -= 1;
+        break;
+      case `API`:
+        state.text = action.text;
+        break;
+      default:
+        break;
+    }
+    return Object.assign({}, state);
+  }
+
+  function counter1(state = initialState, action) {
+    switch (action.type) {
+      case 'INCREMENT':
+        state.count += 1;
+        break;
+      default:
+        break;
+    }
+    return Object.assign({}, state);
+  }
+  function counter2(state = initialState, action) {
+    switch (action.type) {
+      case 'DECREMENT':
+        state.count -= 1;
+        break;
+      default:
+        break;
+    }
+    return Object.assign({}, state);
+  }
+
+  const Reducers = Redux.combineReducers({
+    counter1,
+    counter2
+  });
+
+  //Store (唯一の状態)
+
+  //Reducersより前に宣言するとinitできてなくてハマる
+  var store = Redux.createStore(counter);
+  //var store = Redux.createStore(Reducers);
+
+
+  //viewとdispatcher
+
+  // function render() {
+  //   valueEl.innerHTML = store.getState().toString()
+  // }
+  //render()
+  //store.subscribe(render)
+
+
+//非同期はMiddlewareつかわないならコンテナに書きましょう
+// public async asyncIncrement(): Promise<void> {
+//   this.dispatch(fetchRequestStart());
+//   try {
+//     const response: Response = await fetch("http://192.168.1.33/redmine/issues/444.json");
+//
+//     if (response.status === 200) {
+//       const json: {amount: number} = await response.json();
+//       this.dispatch(incrementAmount(json.amount))
+//     } else {
+//       throw new Error(`illegal status code: ${response.status}`);
+//     }
+//   } catch (err) {
+//     console.error(err);
+//   } finally {
+//     this.dispatch(fetchRequestFinish())
+//   }
+// }
+
+    class App extends React.Component {
+      constructor(props) {
+        super(props);
+      }
+      test(){
+        fetch("http://xxx.xx.xxx.xx/redmine/issues/444.json")
+        .then(response => response.json())
+        .then(json => {
+           console.log(json);
+           this.props.dispatch(api(json));
+        });
+      }
+      render() {
+        return (
+          <div>
+            <p>
+              Clicked: <span id="value">{this.props.state.count}</span> times
+              <button onClick={() =>this.props.dispatch(incrementA(2))}>++</button>
+              <button onClick={() =>this.props.dispatch(increment())}>+</button>
+              <button onClick={() =>this.props.dispatch(decrement())}>-</button>
+              <button onClick={this.test.bind(this)}>api</button>
+            </p>
+            <p>{this.props.state.text}</p>
+          </div>
+        );
+      }
+    }
+
+
+    var Wrapper = ReactRedux.connect(
+    	(state)=>({
+          state: state
+      })
+      //bindActionCreatorsでthis.props.dispatch(hogehoge)をthis.props.hogehogeと書けるが
+      //import * from ../action.jsしないといけないので1ファイルだとあまり
+      // ,
+      //  (dispatch)=>({
+      //    actions: Redux.bindActionCreators(actions, dispatch)
+      //  })
+    )(App);
+
+    var Provider = ReactRedux.Provider;
+    ReactDOM.render(
+      <Provider store={store}>
+        <Wrapper />
+      </Provider>,
+      document.querySelector('#app')
+    );
+
+  </script>
+</body>
+</html>

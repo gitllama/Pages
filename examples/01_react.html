@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<head>
+  <meta charset="UTF-8">
+  <title>React</title>
+</head>
+
+<!-- CDNでReactに関わるscript読込。JSX表記するためにbabelを使用します -->
+<script src="https://unpkg.com/react@15.6.1/dist/react.min.js"></script>
+<script src="https://unpkg.com/react-dom@15.6.1/dist/react-dom.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.38/browser.min.js"></script>
+
+<body>
+<div id="app"></div>
+
+  <!-- jsx表記するためtext/babel -->
+  <script type="text/babel">
+
+  //[標準的なComponent表記]
+  //this.state : 変更可能な状態。setStateでnotificationが立つ
+  //this.props : 変更不可な状態。親から指定されたものを参照できる
+  //getInitialState : this.stateの初期値
+  //render : HTMLを記載します。変数や関数は{}で挿入します。
+  //  またclassは使用できないのでclassNameと記述する必要あり
+  //  ブロックとして閉じてないとエラー吐く
+  var HelloWorld = React.createClass({
+    getInitialState: function () {
+      return {
+        hello: "Hello!",
+        world: "World!"
+      };
+    },
+    onChangeState: function(e) {
+      //inputの更新をstateに反映させる
+      this.setState({ world: e.target.value });
+    },
+  　render: function() {
+      return (
+        <div>
+          <p>{this.state.hello}{this.state.world}</p>
+          <p>{this.state.hello}{this.props.name}</p>
+          <input type="text" defaultValue={this.state.world} onChange={this.onChangeState} />
+        </div>
+      );
+    }
+  });
+
+  //[継承を使用したComponent表記]
+  //refsを使用してDOMへのアクセスを記述できるようになります
+  class HelloWorld2 extends React.Component {
+    constructor(props) {
+      super(props);
+      //stateの初期化をconstructorで記述できる
+      this.state = {value: "..."};
+    }
+    propTypes: {
+      //親からpropsで設定できるイベントの設定
+      onChange: React.PropTypes.func.isRequired
+    }
+    onChangeState(){
+      //verによってDOM参照の書き方がかわるので注意
+      let dst = ReactDOM.findDOMNode(this.refs.hogehoge).value;
+
+      //呼び出し側でbind(this)しないと、クラスではなく別のthisを参照してしまう
+      //事前にthis.onChangeState = this.onChangeState.bind(this)宣言しても良い
+      this.setState({value : dst});
+
+      //親にイベントを伝播
+      this.props.onChange({
+        value : dst
+      });
+    }
+    render() {
+      const hoge = <strong>{this.props.name}</strong>
+      return (
+        <div style={{margin : '20px'}}>
+          Hello!{hoge} {this.state.value}
+          <br/>
+          <input type="text" ref="hogehoge" onChange={this.onChangeState.bind(this)} />
+        </div>
+      );
+    }
+  }
+
+  class App extends React.Component {
+    render() {
+      return (
+        <div>
+          {this.props.name}
+          <HelloWorld  name={"React!"}/>
+          <HelloWorld2 name={"React!?"}
+                       onChange={(e)=> console.log(e.value)}/>
+        </div>
+      );
+    }
+  }
+
+  ReactDOM.render(<App name="Jane" />, document.querySelector('#app'));
+
+  </script>
+</body>
+</html>

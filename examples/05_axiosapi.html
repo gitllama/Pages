@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<head>
+  <meta charset="UTF-8">
+  <title>axios</title>
+</head>
+<script src="https://unpkg.com/react@15.6.1/dist/react.min.js"></script>
+<script src="https://unpkg.com/react-dom@15.6.1/dist/react-dom.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.38/browser.min.js"></script>
+
+<script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+
+<body>
+  <div id="app"></div>
+  <script type="text/babel">
+
+  const className = "header"
+  const css = { color: 'blue' }
+  const hello = () => { return "Hello, World!" }
+
+  class App extends React.Component {
+    constructor(props) {
+      super(props)
+      this.state = {songs: null}
+    }
+    componentWillMount() {
+      axios.get('https://itunes.apple.com/search', {
+        params: {
+          media: 'music',
+          entity: 'song',
+          country: 'JP',
+          term: 'XTC',
+          limit: 10
+        }
+      })
+      .then((response) => {
+        this.setState({songs: response.data.results})
+      })
+    }
+    render() {
+      if (!this.state.songs) {
+        return <div>�ǂݍ��ݒ�</div>
+      }
+      const listDom = this.state.songs.map((song) => {
+          return <li>{song.trackName}</li>
+      })
+      return (
+        <div>
+        <div className={className} style={css}>{hello()}</div>
+        <ul>{listDom}</ul>
+        </div>
+      );
+    }
+  }
+
+  ReactDOM.render(<App />, document.querySelector('#app'));
+
+  </script>
+</body>
+</html>

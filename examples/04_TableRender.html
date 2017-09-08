@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>TableRender</title>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/load.js/1316434407/load-min.js"></script>
+
+  <script src="https://unpkg.com/react@15.6.1/dist/react.min.js"></script>
+  <script src="https://unpkg.com/react-dom@15.6.1/dist/react-dom.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/redux/3.7.2/redux.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-redux/5.0.6/react-redux.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.38/browser.min.js"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/3.4.2/js-yaml.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/jsbarcode/3.5.8/JsBarcode.all.min.js"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-bootstrap/0.31.2/react-bootstrap.min.js"></script>
+
+
+</head>
+
+
+<script type="text/babel" src="04_jtable.js"></script>
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/latest/css/bootstrap.min.css">
+<style type="text/css">
+.sheet {
+  page-break-after: always;
+}
+@page {
+  size: A4;
+  margin: 0;
+}
+@media print {
+  body {
+    width:  210mm; /* needed for Chrome */
+    height: 296mm; /* 1mm margin */
+  }
+  #nonprint {
+    display: none;
+  }
+}
+</style>
+
+<body>
+  <div id="app"></div>
+  <script type="text/babel">
+
+  const defaultYaml = jsyaml.dump({
+    title : "Directions",
+    subtitle : "(draft)",
+    detail : [
+    {type : "code39", value : "A012345"},
+    {type : "code128", value : "A012345"},
+    {type : "condition", title : "DateTime", value : "2017-08-29"},
+    {type : "br"},
+    {type : "condition", title : "CompanyName", value : "MyCompany"},
+    {type : "condition", title : "No.", value : "A123456789"},
+    {type : "condition", title : "A person in charge", value : "llama"},
+    {type : "note", title : "Note :",
+       value : "If you need an explanation, write it in this place."},
+    {type : "table", title : "Table 1 Conditions",
+      data : [
+        {A : 1, B : 2, C : 3},
+        {A : 2, B : 2, C : 6}
+      ]
+    },
+    {type : "warning", title : "warning!", value : "Here is the place to write the items you want particular attention."}
+  ]});
+
+//JSON.stringify(
+  let {
+        Button,FormGroup,FormControl,
+        PageHeader, FieldGroup,
+        Grid, Row, Col, Jumbotron, Table,
+        Panel, Label, Alert
+      } = window.ReactBootstrap;
+
+
+  /******** Action, Action Creators ********/
+
+  const changeyaml =(i)=>({ type: 'CHANGE', value: i });
+  const transjson =(i)=>({ type: 'TRANS', value: i });
+  //let text = JSON.stringify(hoge);
+
+  /******** Reducers, store ********/
+
+  const initialState = {
+    yaml : defaultYaml,
+    yamlcheck : true,
+    obj  : jsyaml.load(defaultYaml),
+    tables : null,
+    transurl : "04_dst.html"
+  };
+
+  function Reducers(state = initialState, action) {
+    switch (action.type) {
+      case 'CHANGE':
+        try{
+          state.obj = jsyaml.load(action.value);
+          state.yamlcheck = true;
+        }catch(e){
+          state.obj = null;
+          state.yamlcheck = false;
+          console.log(e);
+        }
+        break;
+      case 'TRANS':
+        if(('sessionStorage' in window) && (window.sessionStorage !== null)){
+          sessionStorage.setItem('conditions', JSON.stringify(state.obj));
+          window.location.href = state.transurl;
+        }else{
+          //つかえない時
+        }
+        break;
+      default:
+        break;
+    }
+    return Object.assign({}, state);
+  }
+
+  var store = Redux.createStore(Reducers);
+
+  /******** React Components ********/
+
+  const mapStateToProps =(state)=>({ state: state });
+
+  //input
+
+  class uInputComponent extends React.Component {
+    render() {
+      return (
+        <Jumbotron style={{padding:"15px"}}>
+          <h3>Edit Yaml</h3>
+          <FormGroup controlId="formControlsTextarea">
+            <FormControl componentClass="textarea"
+                         placeholder="textarea"
+                         ref="inputText"
+                         style={{
+                           height:"200px",
+                           color: this.props.state.yamlcheck ? "black" : "red"
+                         }}
+                         defaultValue={this.props.state.yaml}
+                         onChange={() => this.props.dispatch(changeyaml(ReactDOM.findDOMNode(this.refs.inputText).value))}/>
+            </FormGroup>
+        </Jumbotron>
+      );
+    }
+  }
+  var InputComponent = ReactRedux.connect(mapStateToProps)(uInputComponent);
+
+  //trans
+
+  class uTrans extends React.Component {
+    render() {
+      return (
+        <div>
+          <FormGroup controlId="formControlsbutton">
+            <Button bsStyle="primary" bsSize="large"
+                    onClick={() => this.props.dispatch(transjson())}
+                    >Submit</Button>
+          </FormGroup>
+        </div>
+      );
+    }
+  }
+  var Trans = ReactRedux.connect(mapStateToProps)(uTrans);
+
+  //render
+
+  class uTableRender extends React.Component {
+    componentWillUpdate(nextProps){
+      //load('04_jtable.js').thenRun(()=> { jtable.render(this.props.state.obj) +
+        ReactDOM.findDOMNode(this.refs.tables).innerHTML
+          = testaaa();
+      //});
+    }
+    render() {
+      return (
+        <div>
+          <img height="40px" src={""} />
+          <PageHeader>{this.props.state.obj.title} <small>{this.props.state.obj.subtitle}</small></PageHeader>
+          <div ref="tables"></div>
+        </div>
+      );
+    }
+  }
+  var TableRender = ReactRedux.connect(mapStateToProps)(uTableRender);
+
+
+
+  //app
+
+  class uApp extends React.Component {
+    render() {
+      return (
+        <div>
+          <div id="nonprint" style={{padding:'20px'}}>
+            <h3>Redmine API Test</h3>
+            <InputComponent />
+            <Trans />
+          </div>
+          <section style={{pageBreakAfter : 'always'}}>
+            <TableRender />
+          </section>
+        </div>
+      );
+    }
+  }
+  var App = ReactRedux.connect(mapStateToProps)(uApp);
+
+  /******** Provider, Render ********/
+
+  var Provider = ReactRedux.Provider;
+  ReactDOM.render(
+    <Provider store={store}>
+      <App />
+    </Provider>,
+    document.querySelector('#app')
+  );
+
+
+  /*Output*/
+
+  //
+  // class TableConditons extends React.Component {
+  //   constructor(props) {
+  //     super(props)
+  //   }
+  //   render() {
+  //     return (
+  //       <div style={{display:"flex"}}>
+  //         <div style={{width:"160px", textAlign:"left"}}>
+  //           <strong>{this.props.title}</strong>
+  //         </div>
+  //         <div style={{width:"30px", textAlign:"center"}}>
+  //           <strong>:</strong>
+  //         </div>
+  //         <div>{this.props.value}</div>
+  //       </div>
+  //     );
+  //   }
+  // }
+  //
+  // class TableBarcode extends React.Component {
+  //   constructor(props) {
+  //     super(props);
+  //     this.state={
+  //       type  : this.props.type,
+  //       value : this.props.value
+  //     }
+  //   }
+  //   componentDidMount(){
+  //     this.redraw(this.props);
+  //   }
+  //   componentWillReceiveProps(nextProps) {
+  //     this.redraw(nextProps);
+  //   }
+  //   redraw(obj){
+  //     try{
+  //       JsBarcode(ReactDOM.findDOMNode(this.refs.canvasBarCode),
+  //         obj.value,
+  //         {
+  //           width: 1,
+  //           height:40,
+  //           fontSize: 12,
+  //           textMargin : 2,
+  //           format: obj.type
+  //         }
+  //       );
+  //     }catch(e){
+  //       JsBarcode(ReactDOM.findDOMNode(this.refs.canvasBarCode),
+  //         null,
+  //         {
+  //           width: 1,
+  //           height:40,
+  //           fontSize: 12,
+  //           textMargin : 2,
+  //           format: obj.type
+  //         }
+  //       );
+  //     }
+  //   }
+  //   render() {
+  //     return (
+  //       <div>
+  //         <svg ref="canvasBarCode" />
+  //       </div>
+  //     );
+  //   }
+  // }
+  //
+  // class TableMain extends React.Component {
+  //   constructor(props) {
+  //     super(props)
+  //     this.state={
+  //       title : this.props.title,
+  //       data : this.props.src,
+  //       index : this.props.index,
+  //       isColSpan : this.props.isColSpan,
+  //       isResponsive : this.props.isResponsive
+  //     };
+  //   }
+  //   componentWillReceiveProps(nextProps) {
+  //     this.setState({
+  //       title : nextProps.title,
+  //       data : nextProps.src,
+  //       index : nextProps.index,
+  //       isColSpan : nextProps.isColSpan,
+  //       isResponsive : nextProps.isResponsive
+  //     });
+  //   }
+  //   render() {
+  //     //thead
+  //     const th_dom = Object.keys(this.state.data[0]).map((n)=>{return <th>{n}</th>});
+  //     const thead_dom = this.state.index ? <thead><tr> <th>#</th> {th_dom} </tr></thead>
+  //                                        : <thead><tr> {th_dom} </tr></thead>;
+  //     //tbody
+  //     const td_dom =(value)=>{
+  //       if(!this.state.isColSpan) return Object.values(value).map((n)=>{return <td>{n}</td>});
+  //       var hoge = Object.values(value).map((n)=> n);
+  //       var dst = [];
+  //       for(let i = 0; i < hoge.length; i++){
+  //         if(i>0 && hoge[i-1] == hoge[i]) continue;
+  //         for(var j = 1;j< hoge.length - i; j++){
+  //           if(hoge[i] != hoge[i+j]) break;
+  //         }
+  //         if(j > 1) dst.push(<td colSpan={j}>{hoge[i]}</td>);
+  //         else dst.push(<td>{hoge[i]}</td>);
+  //       }
+  //       return dst;
+  //     }
+  //     const td_doms =(value, index)=>{
+  //       return this.state.index ? <tr><td>{index+1}</td> {td_dom(value)}</tr>
+  //                               : <tr>{td_dom(value)}</tr>;
+  //     };
+  //     const tbody_dom = this.state.data.map((value, index)=>{
+  //       return <tbody> {td_doms(value, index)} </tbody>;
+  //     });
+  //     //isResponsive
+  //     const table_dom =(thead,tbody)=>{
+  //       return this.state.isResponsive
+  //         ? <Table striped bordered condensed hover>{thead}{tbody}</Table>
+  //         : <Table responsive>{thead}{tbody}</Table>;
+  //     };
+  //     //return
+  //     return (
+  //       <div>
+  //         <label>{this.state.title}</label>
+  //         {table_dom(thead_dom,tbody_dom)}
+  //       </div>
+  //     );
+  //   }
+  // }
+  //
+  // class TableParse extends React.Component {
+  //   constructor(props) {
+  //     super(props);
+  //     this.state={
+  //       title : "null",
+  //       subtitle : "null",
+  //       detail : null
+  //     };
+  //   }
+  //   componentWillReceiveProps(nextProps) {
+  //     try{
+  //       let hoge = JSON.parse(nextProps.src);
+  //       this.setState({
+  //         title : hoge.title,
+  //         subtitle : hoge.subtitle,
+  //         detail : hoge.detail
+  //       });
+  //     }catch(e){
+  //       console.log(e);
+  //       let m =  <p>yaml is wrong<br/>{e.toString()}</p>;
+  //       this.setState({
+  //         title : null,
+  //         subtitle : null,
+  //         detail :  [
+  //           {type : "warning", title : "Err!", value :m}
+  //         ]
+  //       });
+  //     }
+  //   }
+  //   changeTable(src){
+  //     if(src == null) return null;
+  //     return src.map((i)=>{
+  //       switch(i.type){
+  //         case "br":
+  //           return <br/>;
+  //         case "condition":
+  //           return <TableConditons title={i.title} value={i.value}/>;
+  //         case "note":
+  //           return <div  style={{margin:'20px 0px 20px 0px'}}>
+  //                     <p><strong>{i.title}</strong></p>
+  //                     <p style={{margin:'0px 0px 0px 20px'}}>{i.value}</p>
+  //                   </div>;
+  //         case "table":
+  //           return <TableMain title={i.title} src={i.data}
+  //                     index={true}
+  //                     isResponsive={false}
+  //                     isColSpan={true} />;
+  //         case "warning":
+  //           return (<Alert bsStyle="danger" data-html="true">
+  //                    <h4>{i.title}</h4>
+  //                      {i.value}
+  //                   </Alert>);
+  //         case "code39":
+  //           return (<TableBarcode type="CODE39" value={i.value}/>);
+  //         case "code128":
+  //           return (<TableBarcode type="CODE128" value={i.value}/>);
+  //         default:
+  //           return "";
+  //       }
+  //     });
+  //   }
+  //   render() {
+  //     const dst = this.changeTable(this.state.detail);
+  //     return (
+  //       <div style={{margin:'50px'}}>
+  //         <TableTitle title={this.state.title}
+  //                     subtitle={this.state.subtitle} />
+  //         {dst}
+  //       </div>
+  //     );
+  //   }
+  // }
+
+
+  </script>
+</body>
+</html>
