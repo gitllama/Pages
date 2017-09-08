@@ -39,8 +39,15 @@
 
   //Action, Action Creators
 
-  const result =(json)=> ({ type: 'RESULT', text: JSON.stringify(json)});
-  const setcondition =(yaml)=>  ({  type: 'SETCONDITION', obj : jsyaml.load(yaml)});
+  const result =(hoge)=> {
+    let text = JSON.stringify(hoge);
+    return { type: 'RESULT', text};
+  }
+  const setcondition =(yaml)=> {
+    //console.log(yaml);
+    return { type: 'SETCONDITION', obj : jsyaml.load(yaml)};
+  }
+
 
   //Reducers
 
@@ -57,7 +64,7 @@
         break;
       case 'SETCONDITION':
         state.condition = action.obj;
-        console.log(action.obj);
+        //console.log(action.obj);
         break;
       default:
         break;
@@ -77,16 +84,23 @@
     componentWillReceiveProps(nextProps) {
       try{
         ReactDOM.findDOMNode(this.refs.wfmap).innerHTML = nextProps;
-        //load('jprocessdocs.js').thenRun(()=> {
+        load('jprocessdocs.js').thenRun(()=> {
+          $.get("defaultwf.yaml", (text)=>{
+            let obj = nextProps.state.condition;
+            let hh = new jwafermap(jsyaml.load(text));
+            ReactDOM.findDOMNode(this.refs.wfmap).innerHTML = hh.getstr(obj[0].Map, 1);
 
-        fetch("/defaultwf.yaml", {redirect: 'manual'})
+          });
+        });
+        /*
+        fetch("defaultwf.yaml")
         .then(response => response.text())
         .then(text => {
            let obj = nextProps.state.condition;
            let hh = new jwafermap(jsyaml.load(text));
            ReactDOM.findDOMNode(this.refs.wfmap).innerHTML = hh.getstr(obj, 1);
         });
-
+        */
           //  let obj = nextProps.state.condition;
           //  let hh = new jwafermap();
           //  ReactDOM.findDOMNode(this.refs.wfmap).innerHTML = hh.getstr(obj, 1);
@@ -142,7 +156,6 @@
               </td>
             </tr>
           </table>
-          <button onClick={this.test.bind(this)}>submit</button>
           <button onClick={this.test.bind(this)}>submit</button>
         </div>
       );
