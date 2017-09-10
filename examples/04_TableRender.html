@@ -3,25 +3,21 @@
 <head>
   <meta charset="UTF-8">
   <title>TableRender</title>
-
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/load.js/1316434407/load-min.js"></script>
-
-  <script src="https://unpkg.com/react@15.6.1/dist/react.min.js"></script>
-  <script src="https://unpkg.com/react-dom@15.6.1/dist/react-dom.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/redux/3.7.2/redux.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-redux/5.0.6/react-redux.min.js"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.38/browser.min.js"></script>
-
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/3.4.2/js-yaml.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/jsbarcode/3.5.8/JsBarcode.all.min.js"></script>
-
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-bootstrap/0.31.2/react-bootstrap.min.js"></script>
-
-
 </head>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/load.js/1316434407/load-min.js"></script>
 
-<script type="text/babel" src="04_jtable.js"></script>
+<script src="https://unpkg.com/react@15.6.1/dist/react.min.js"></script>
+<script src="https://unpkg.com/react-dom@15.6.1/dist/react-dom.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/redux/3.7.2/redux.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-redux/5.0.6/react-redux.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.38/browser.min.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/3.4.2/js-yaml.min.js"></script>
+<script src="https://cdn.jsdelivr.net/jsbarcode/3.5.8/JsBarcode.all.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-bootstrap/0.31.2/react-bootstrap.min.js"></script>
 
 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/latest/css/bootstrap.min.css">
 <style type="text/css">
@@ -37,7 +33,7 @@
     width:  210mm; /* needed for Chrome */
     height: 296mm; /* 1mm margin */
   }
-  #nonprint {
+  .nonprint {
     display: none;
   }
 }
@@ -82,6 +78,7 @@
 
   const changeyaml =(i)=>({ type: 'CHANGE', value: i });
   const transjson =(i)=>({ type: 'TRANS', value: i });
+  const transhtml =(i)=>({ type: 'TRANSHTML'});
   //let text = JSON.stringify(hoge);
 
   /******** Reducers, store ********/
@@ -91,7 +88,7 @@
     yamlcheck : true,
     obj  : jsyaml.load(defaultYaml),
     tables : null,
-    transurl : "04_dst.html"
+    transurl : "04_TableRenderdst.html"
   };
 
   function Reducers(state = initialState, action) {
@@ -99,6 +96,7 @@
       case 'CHANGE':
         try{
           state.obj = jsyaml.load(action.value);
+          state.tables = jsyaml.load(action.value); //table render
           state.yamlcheck = true;
         }catch(e){
           state.obj = null;
@@ -113,6 +111,18 @@
         }else{
           //つかえない時
         }
+        break;
+      case 'TRANSHTML':
+        (()=>{
+          //ReactDOM.findDOMNode(this.refs.tes).innerHTML
+          let win = window.open("","newwin",null);
+          win.document.write('<head><meta charset="UTF-8"><title>Print</title></head>');
+          win.document.write('<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/latest/css/bootstrap.min.css">');
+
+          //win.document.write(state.tables);
+          win.document.write(document.querySelector('#printable').innerHTML);
+          win.document.close();
+        })();
         break;
       default:
         break;
@@ -167,14 +177,32 @@
   }
   var Trans = ReactRedux.connect(mapStateToProps)(uTrans);
 
+  class uTrans2 extends React.Component {
+    render() {
+      return (
+        <div>
+          <FormGroup controlId="formControlsbutton">
+            <Button bsStyle="primary" bsSize="large"
+                    onClick={() => this.props.dispatch(transhtml())}
+                    >Submit</Button>
+          </FormGroup>
+        </div>
+      );
+    }
+  }
+  var Trans2 = ReactRedux.connect(mapStateToProps)(uTrans2);
+
   //render
 
   class uTableRender extends React.Component {
     componentWillUpdate(nextProps){
-      //load('04_jtable.js').thenRun(()=> { jtable.render(this.props.state.obj) +
-        ReactDOM.findDOMNode(this.refs.tables).innerHTML
-          = testaaa();
-      //});
+      load('04_jtable.js').thenRun(()=> {
+        let a = jtable.render(this.props.state.obj)
+        ReactDOM.findDOMNode(this.refs.tables).innerHTML = a;
+        //    = jtable.render(this.props.state.obj) +testaaa();
+        JsBarcode(".barcode").init();
+      });
+
     }
     render() {
       return (
@@ -196,19 +224,23 @@
     render() {
       return (
         <div>
-          <div id="nonprint" style={{padding:'20px'}}>
+          <div className="nonprint" style={{padding:'20px'}}>
             <h3>Redmine API Test</h3>
             <InputComponent />
             <Trans />
+            <Trans2 />
           </div>
-          <section style={{pageBreakAfter : 'always'}}>
-            <TableRender />
-          </section>
+          <div id="printable">
+            <section style={{pageBreakAfter : 'always'}}>
+              <TableRender />
+            </section>
+          </div>
         </div>
       );
     }
   }
   var App = ReactRedux.connect(mapStateToProps)(uApp);
+
 
   /******** Provider, Render ********/
 

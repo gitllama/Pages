@@ -7,7 +7,11 @@ class jtable{
     for(let i of obj.detail){
       switch (i.type) {
         case 'code39':
-          dst += `<p>${i.value}</p>`;
+          dst += `<svg class="barcode"
+  jsbarcode-format="code39"
+  jsbarcode-value="${i.value}"
+  jsbarcode-textmargin="0"
+  jsbarcode-fontoptions="bold">`;
           break;
         default:
           break;
@@ -15,8 +19,4 @@ class jtable{
     }
     return dst;
   }
-}
-
-function testaaa(){
-  return <div>aa</div>;
 }
