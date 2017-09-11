@@ -90,11 +90,11 @@
     }
     componentWillMount(){ /*DOMツリーに追加される前*/ }
     componentDidMount(){ /*DOMツリーに追加された状態*/ }
-    componentWillReceiveProps(nextProps){ /*Propが更新時*/ }
-    shouldComponentUpdate(){ return false; /*rerenderの実行・非実行を返せる*/ }
+    componentWillUnmount(){/*DOMから削除される時*/}
     componentWillUpdate(nextProps, nextState){/*component更新前*/}
     componentDidUpdate(prevProps, prevState){/*component更新後*/}
-    componentWillUnmount(){/*DOMから削除される時*/}
+    componentWillReceiveProps(nextProps){ /*Propが更新時*/ }
+    shouldComponentUpdate(){ return false; /*rerenderの実行・非実行を返せる*/ }
     render() {
       return (
         <div>
