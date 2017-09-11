@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>TableRender</title>
+</head>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/load.js/1316434407/load-min.js"></script>
+
+<script src="https://unpkg.com/react@15.6.1/dist/react.min.js"></script>
+<script src="https://unpkg.com/react-dom@15.6.1/dist/react-dom.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/redux/3.7.2/redux.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-redux/5.0.6/react-redux.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.38/browser.min.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/3.4.2/js-yaml.min.js"></script>
+<script src="https://cdn.jsdelivr.net/jsbarcode/3.5.8/JsBarcode.all.min.js"></script>
+<script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/0.3.5/marked.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-bootstrap/0.31.2/react-bootstrap.min.js"></script>
+
+<body>
+  <div id="app"></div>
+  <script type="text/babel">
+
+  let header = (()=>{/*
+    <head>
+      <meta charset="UTF-8">
+      <title>iframe</title>
+      <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/latest/css/bootstrap.min.css">
+    </head>
+  */}).toString().match(/\/\*([^]*)\*\//)[1];
+
+  let {
+        Button,FormGroup,FormControl,
+        PageHeader, FieldGroup,
+        Grid, Row, Col, Jumbotron, Table,
+        Panel, Label, Alert
+      } = window.ReactBootstrap;
+
+  /******** Action, Action Creators ********/
+
+  const changemarkdown =(i)=>({ type: 'CHANGE', value: i });
+
+  //let text = JSON.stringify(hoge);
+
+  /******** Reducers, store ********/
+
+  const initialState = {
+    markdown : "# TITLE",
+    html : "<p>dummy</p>",
+  };
+
+  function Reducers(state = initialState, action) {
+    switch (action.type) {
+      case 'CHANGE':
+        try{
+          state.markdown = action.value;
+          state.html = marked(action.value);
+        }catch(e){
+          console.log(e);
+        }
+        break;
+      default:
+        break;
+    }
+    return Object.assign({}, state);
+  }
+
+  var store = Redux.createStore(Reducers);
+
+  /******** React Components ********/
+
+  const mapStateToProps =(state)=>({ state: state });
+
+  //input
+
+  class uInputComponent extends React.Component {
+    render() {
+      return (
+        <Jumbotron style={{padding:"15px"}}>
+          <h3>Edit Markdown</h3>
+          <FormGroup controlId="formControlsTextarea">
+            <FormControl componentClass="textarea"
+                         placeholder="textarea"
+                         ref="inputText"
+                         defaultValue={this.props.state.markdown}
+                         onChange={() => this.props.dispatch(changemarkdown(ReactDOM.findDOMNode(this.refs.inputText).value))}/>
+            </FormGroup>
+        </Jumbotron>
+      );
+    }
+  }
+  var InputComponent = ReactRedux.connect(mapStateToProps)(uInputComponent);
+
+  //app
+
+  class uApp extends React.Component {
+    componentWillReceiveProps(nextProps){
+      //インラインにsrcdoc={}は反応しないので
+      ReactDOM.findDOMNode(this.refs.uframe).srcdoc
+        = header
+        + nextProps.state.html
+        + udiv.innerHTML; //一つ古いの参照してるので更新パターン変更必要
+    }
+    render() {
+      return (
+        <div>
+          <div style={{padding:'20px'}}>
+            <InputComponent />
+          </div>
+          <div>
+            {this.props.state.html}
+          </div>
+          <div>
+            <iframe ref="uframe" width="100%" height="200px"></iframe>
+          </div>
+        </div>
+      );
+    }
+  }
+  var App = ReactRedux.connect(mapStateToProps)(uApp);
+
+
+  /******** Provider, Render ********/
+
+  var Provider = ReactRedux.Provider;
+  ReactDOM.render(
+    <Provider store={store}>
+      <App />
+    </Provider>,
+    document.querySelector('#app')
+  );
+
+  var udiv = document.createElement("div");
+  ReactDOM.render(
+    <Provider store={store}>
+      <InputComponent />
+    </Provider>,
+    udiv
+  );
+
+  </script>
+</body>
+</html>
