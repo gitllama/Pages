@@ -81,6 +81,28 @@
     }
   }
 
+  //[lifecycle]
+  //  非同期処理を行う際は if(this.isMounted()) { this.setState({data: res.body.data});
+  //  でUnmountされてないか確認しとかないとエラーでることあるよ
+  class ComponentLifecycle extends React.Component {
+    constructor(props) {
+      super(props);
+    }
+    componentWillMount(){ /*DOMツリーに追加される前*/ }
+    componentDidMount(){ /*DOMツリーに追加された状態*/ }
+    componentWillReceiveProps(nextProps){ /*Propが更新時*/ }
+    shouldComponentUpdate(){ return false; /*rerenderの実行・非実行を返せる*/ }
+    componentWillUpdate(nextProps, nextState){/*component更新前*/}
+    componentDidUpdate(prevProps, prevState){/*component更新後*/}
+    componentWillUnmount(){/*DOMから削除される時*/}
+    render() {
+      return (
+        <div>
+        </div>
+      );
+    }
+  }
+
   class App extends React.Component {
     render() {
       return (
