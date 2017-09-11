@@ -46,7 +46,7 @@ https://github.com/kripken/sql.js
 
 [07_ReactReduxIFrame]("07_ReactReduxIFrame.html")
 
-Redmineと共用しようとするとCSSがぶつかる件の苦肉の策
+Redmineと共用しようとするとCSSがぶつかる件の苦肉の策。markdownのレンダリングも合わせて
 
 ### JQuery
 
