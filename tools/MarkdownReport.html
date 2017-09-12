@@ -16,11 +16,35 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/0.3.5/marked.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/react-bootstrap/0.31.2/react-bootstrap.min.js"></script>
 
-
 <style type="text/css">
-html,body {
-  height:100%;
-  widht:100%; }
+  html,body {
+    height: 100%;
+    width: 100%;
+  }
+  @page {
+    size: A4;
+    margin: 0;
+  }
+  @media screen{
+    .nonprint {
+      display: block;
+    }
+    .printable {
+      display: none;
+    }
+  }
+  @media print {
+    body {
+      width: 210mm; /* needed for Chrome */
+      height: 296mm; /* 1mm margin */
+    }
+    .nonprint {
+      display: none;
+    }
+    .printable {
+      display: block;
+    }
+  }
 </style>
 
 <body style="">
@@ -91,13 +115,9 @@ html,body {
   //app
 
   class uApp extends React.Component {
-    componentDidMount(){
-      let md = "# TITLE\r\n\r\n- 1\r\n- 2\r\n- 3\r\n\r\n| a | b | c |\r\n|:---|:---|:---|\r\n|a | v | C |\r\n|v |c | d |\r\n\r\n";
-      md += "```\r\n for(int i in hoge){}\r\n```"
-      this.props.dispatch(changemarkdown(md));
-    }
-    componentDidUpdate(prevProps, prevState){
-      let header = (()=>{/*
+    constructor(props) {
+      super(props);
+      this.header = (()=>{/*
         <html lang="en">
         <head>
           <meta charset="UTF-8">
@@ -105,22 +125,37 @@ html,body {
           <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/2.8.0/github-markdown.min.css">
         </head>
       */}).toString().match(/\/\*([^]*)\*\//)[1];
-
+    }
+    componentDidMount(){
+      let md = "# TITLE\r\n\r\n- 1\r\n- 2\r\n- 3\r\n\r\n| a | b | c |\r\n|:---|:---|:---|\r\n|a | v | C |\r\n|v |c | d |\r\n\r\n";
+      md += "```\r\n for(int i in hoge){}\r\n```"
+      this.props.dispatch(changemarkdown(md));
+    }
+    componentDidUpdate(prevProps, prevState){
       ReactDOM.findDOMNode(this.refs.uframe).srcdoc
-       = header
+       = this.header
        + "<body>"
        + ReactDOM.findDOMNode(this.refs.main).innerHTML
        + "</body></html>";
     }
+    printa(){
+        let win = window.open("","newwin",null);
+        win.document.write(this.header + "<body>" + ReactDOM.findDOMNode(this.refs.main).innerHTML + "</body>");
+        win.onload =()=> win.print();
+        win.document.close();
+    }
     render() {
       return (
         <div style={{height:"100%"}}>
-          <h1>markdown editor</h1>
-          <div style={{width:"95%", height:"95%", display:"flex", position: "absolute"}}>
-            <InputComponent />
-            <iframe ref="uframe" width="95%" height="95%" style={{border:"none"}}></iframe>
+          <div className="nonprint">
+            <h1>markdown editor</h1>
+            <button onClick={this.printa.bind(this)}>print</button>
+            <div  style={{width:"95%", height:"95%", display:"flex", position: "absolute"}}>
+              <InputComponent />
+              <iframe ref="uframe" width="95%" height="95%" style={{border:"none"}}></iframe>
+            </div>
           </div>
-          <div ref="main" style={{display:"none"}}>
+          <div ref="main" >
             <div className="markdown-body">
               <div dangerouslySetInnerHTML={{__html: this.props.state.html}}/>
             </div>
