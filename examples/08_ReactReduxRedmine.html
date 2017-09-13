@@ -96,7 +96,6 @@ let {
       let _url = `http://${_addr}/redmine/issues/${_id}.json?format=json&include=relations,attachments`;
 
       this.props.dispatch(onload());
-      //再描画がかかってないね
 
       fetch(_url).then(response => response.json())
       .then(json => {
