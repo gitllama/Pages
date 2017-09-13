@@ -17,12 +17,33 @@
 
   //[標準的なComponent表記]
   //this.state : 変更可能な状態。setStateでnotificationが立つ
-  //this.props : 変更不可な状態。親から指定されたものを参照できる
+  //this.props : 変更不可な状態。親から指定されたものを参照できる(<>hoge<>はprops.children)
   //getInitialState : this.stateの初期値
   //render : HTMLを記載します。変数や関数は{}で挿入します。
   //  またclassは使用できないのでclassNameと記述する必要あり
   //  ブロックとして閉じてないとエラー吐く
   var HelloWorld = React.createClass({
+    //バリデータの範囲の指定（※開発モード時にしかチェックされない）
+    //isRequired : propが提供されなかった場合に警告
+    propTypes: {
+      hello: React.PropTypes.string.isRequired,
+      world: React.PropTypes.string.isRequired,
+      todo: React.PropTypes.shape({
+        id: React.PropTypes.number,
+        value: React.PropTypes.any
+      }),
+    },
+    //カスタムバリデータ
+    customProp: function(props, propName, componentName) {
+      if (!/matchme/.test(props[propName])) {
+        return new Error('Validation failed!');
+      }
+    },
+    getDefaultProps() {
+      return {
+        count: 0
+      };
+    },
     getInitialState: function () {
       return {
         hello: "Hello!",
@@ -38,6 +59,7 @@
         <div>
           <p>{this.state.hello}{this.state.world}</p>
           <p>{this.state.hello}{this.props.name}</p>
+          <p>{this.props.children}</p>
           <input type="text" defaultValue={this.state.world} onChange={this.onChangeState} />
         </div>
       );
@@ -108,7 +130,7 @@
       return (
         <div>
           {this.props.name}
-          <HelloWorld  name={"React!"}/>
+          <HelloWorld  name={"React!"}>children</>
           <HelloWorld2 name={"React!?"}
                        onChange={(e)=> console.log(e.value)}/>
         </div>
