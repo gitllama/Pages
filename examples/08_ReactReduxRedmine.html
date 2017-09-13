@@ -13,6 +13,8 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/redux/3.7.2/redux.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react-redux/5.0.6/react-redux.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.38/browser.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/immutable/3.8.1/immutable.min.js"></script>
+
   <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/3.4.2/js-yaml.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/react-bootstrap/0.31.2/react-bootstrap.min.js"></script>
 
@@ -21,63 +23,78 @@
   // ここから～ここまで を記述すると
   //dummyのscriptタグを含んだこのようなhead構成になる
 
-let {
-      Button,FormGroup,FormControl,
-      PageHeader, FieldGroup,
-      Grid, Row, Col, Jumbotron, Table,
-      Panel, Label, Alert
-    } = window.ReactBootstrap;
+  let {
+    Button,FormGroup,FormControl,PageHeader, FieldGroup,
+    Grid, Row, Col, Jumbotron, Table,Panel, Label, Alert
+  } = window.ReactBootstrap;
 
-
-  let header = (()=>{/*
-    <head>
-      <meta charset="UTF-8">
-      <title>iframe</title>
-      <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/latest/css/bootstrap.min.css">
-    </head>
-  */}).toString().match(/\/\*([^]*)\*\//)[1];
-
-  const addrdefault = "192.168.1.33"
-
+  const addrdebug = "http://192.168.1.xx";
+  const apikey = "xxxx";
 
   /******** Action, Action Creators ********/
 
+  const usercheck =(i)=>({ type: 'USERCHECK', value: i });
   const submit =(i)=>({ type: 'SUBMIT', value: i });
   const onload =()=>({ type: 'ONLOAD'});
 
   /******** Reducers, store ********/
 
-  const initialState = {
+  //immutable.jsを使用して効率化
+  const defaultState = {
+    userid : "-1",
+    username : "null",
     onload : false,
     conditions : "",
     result : ""
   };
+  const initialState = Immutable.Map(defaultState);
 
-  function Reducers(state = initialState, action) {
-    console.log(action.type);
-    switch (action.type) {
-      case 'ONLOAD':
-        return {
-          ...state,
-          onload: true
-        }
-      case 'SUBMIT':
-        return {
-          ...state,
-          onload: false,
-          conditions: action.value.conditions,
-          result: action.value.result
-        }
-      default:
-        //init時にaction.type = @@redux/INIT呼ばれる
-        return state;
+  //switch -> オブジェクトに変更
+  const reducers = {
+    'ONLOAD' : (state, action) => (
+      //immutable.jsでのobj変更
+      state.set('onload', true)
+    ),
+    'SUBMIT' : (state, action) => (
+      //immutable.jsでの複数パラメータのobj変更
+      //再編成を一度だけで済ます
+      state.withMutations(m => (
+        m.set('onload', false)
+        .set('conditions', action.value.conditions)
+    　　.set('result', action.value.result)
+      ))
+    ),
+    "USERCHECK" : (state, action) =>(
+      state.withMutations(m => (
+        m.set('onload', false)
+        .set('userid', action.value.userid)
+    　　.set('username', action.value.username)
+      ))
+    ),
+    "@@redux/INIT" : (state, action) =>(
+      //init時にaction.type = @@redux/INIT呼ばれる
+      state
+    )
+  };
+
+  function Reducer(state = initialState, action) {
+    if (reducers[action.type]) {
+        return reducers[action.type](state, action);
     }
+    return state;
   }
-
-  var store = Redux.createStore(Reducers);
+  var store = Redux.createStore(Reducer);
 
 
   /******** React Components ********/
+
+  //immutable.jsでのobjの取出し
+  //mapStateToPropsでstate: state.toJS()とすると生のJavaScriptオブジェクトへ
+  //変換できるが複製が発生するので効率的にはあまり意味がない
+  //取り出し先で.getや.getIn使用する方が良い
+
+  //Component内での値の取出しはimmutable.jsを使用しているため
+  //this.props.state.get('hoge')となる
 
   const mapStateToProps =(state)=>({ state: state });
 
@@ -85,15 +102,24 @@ let {
   //input
 
   class uInputComponent extends React.Component {
+    componentDidMount(){
+      let _url = `${addrdebug}/redmine/users/current.json?key=${apikey}`;
+      fetch(_url).then(response => response.json())
+      .then(json => {
+        this.props.dispatch(usercheck({
+          userid : json.user.id,
+          username : json.user.login
+        }));
+      });
+    }
     onSubmit(){
       //非同期処理のためComponentで処理してから結果のみdispatchに投げる
 
-      let _addr = ReactDOM.findDOMNode(this.refs.addr).value;
       let _id = ReactDOM.findDOMNode(this.refs.ticket).value;
       let conditions = "";
       let result = "";
 
-      let _url = `http://${_addr}/redmine/issues/${_id}.json?format=json&include=relations,attachments`;
+      let _url = `${addrdebug}/redmine/issues/${_id}.json?format=json&include=relations,attachments`;
 
       this.props.dispatch(onload());
 
@@ -120,11 +146,8 @@ let {
     render() {
       return (
         <div>
+          <p>{this.props.state.get('userid') + " : " + this.props.state.get('username')}</p>
           <table border="0">
-            <tr>
-              <td> <label>addr :</label> </td>
-              <td> <input type="text" ref="addr" defaultValue={addrdefault} /> </td>
-            </tr>
             <tr>
               <td> <label>ticket No</label> </td>
               <td> <input type="text" ref="ticket" defaultValue={"444"} /> </td>
@@ -141,10 +164,16 @@ let {
 
 
   class uApp extends React.Component {
-    componentDidMount(){
-    }
     componentDidUpdate(prevProps, prevState){
-      //インラインにsrcdoc={}書いてもReactでは反応しないので
+
+      let header = (()=>{/*
+        <head>
+          <meta charset="UTF-8">
+          <title>iframe</title>
+          <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/latest/css/bootstrap.min.css">
+        </head>
+      */}).toString().match(/\/\*([^]*)\*\//)[1];
+
       ReactDOM.findDOMNode(this.refs.uframe).srcdoc
        = header
        + ReactDOM.findDOMNode(this.refs.main).innerHTML;
@@ -159,8 +188,8 @@ let {
         }else{
           return(
             <div>
-              <div>{this.props.state.conditions}</div>
-              <div>{this.props.state.result}</div>
+              <div>{this.props.state.get('conditions')}</div>
+              <div>{this.props.state.get('result')}</div>
             </div>
           );
         }
@@ -171,7 +200,7 @@ let {
             <InputComponent />
           </div>
           <div ref="main" style={{display:"none"}}>
-            {hoge(this.props.state.onload)}
+            {hoge(this.props.state.get('onload'))}
           </div>
           <hr/>
           <h3>output</h3>
