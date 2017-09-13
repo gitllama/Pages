@@ -53,6 +53,9 @@ Redmineと共用しようとするとCSSがぶつかる件の苦肉の策。mark
 View customizes puluginを使用したReact+ReduxのRedmine埋め込み例。  
 例えば".splitcontentright"にレンダリングすればリッチなホームページが作成できます（".splitcontentleft"は全般設定のウェルカムメッセージが表示されている）
 
+- stateのimmutable.jsでの管理
+- Reducerのswitch -> 辞書化
+
 ### JQuery
 
 
