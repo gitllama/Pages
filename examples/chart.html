@@ -43,14 +43,22 @@
     onload : false,
     conditions : "",
     result : "",
-    data : [{
+    data1 : {
       x: ['１月','２月','３月','４月','５月','６月','７月'],
       y: [65, 59, 80, 81, 56, 55, 6],
-      type: 'plot' //bar
-    }]
+      type: 'plot',
+      name: 'plot1',
+      line: {shape: 'spline'}
+    },
+    data2 : {
+      x: ['１月','２月','３月','４月','５月','６月','７月'],
+      y: [65, 59, 80, 81, 56, 55, 6],
+      type: 'bar',
+      name: 'bar1'
+    }
   };
   const initialState = Immutable.Map(defaultState);
-  //switch -> オブジェクトに変更
+
   const reducers = {
     'ONLOAD' : (state, action) => (
       state.set('onload', true)
@@ -92,7 +100,7 @@
 
       Plotly.plot(
         ReactDOM.findDOMNode(this.refs.stage),
-        this.props.state.get('data'),
+        [this.props.state.get('data1'),this.props.state.get('data2')],
         {
           title: 'サンプルチャート',
           titlefont: {size: 12},
