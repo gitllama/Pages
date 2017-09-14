@@ -6,17 +6,17 @@ Examples for Pages (Frontend-Code) by JavaScript.
 
 ### React, React-Bootstrap
 
-[01_React]("01_react.html")
+[01_React]("/01_react.html")
 
-[02_React-Bootstrap]("02_react-bootstrap.html")
+[02_React-Bootstrap]("/02_react-bootstrap.html")
 
 ### React+Redux
 
-[03_ReactRedux]("03_ReactRedux.html")
+[03_ReactRedux]("/03_ReactRedux.html")
 
 React+Reduxをnode.jpを使用せずフロントエンドとCDNのみで記述しています。環境構築の手間がなく開発環境を選びませんが、あまり行儀が良い気はしましません。
 
-[04_TableRender]("04_TableRender.html")
+[04_TableRender]("/04_TableRender.html")
 
 Yamlデータに対するReact+Reduxでのリアルタイムレンダリング + 遷移先レンダリング
 
@@ -27,11 +27,11 @@ Yamlデータに対するReact+Reduxでのリアルタイムレンダリング +
 
 ### API / SQL
 
-[05_axiosapi]("05_axiosapi.html")
+[05_axiosapi]("/05_axiosapi.html")
 
 axiosを使用したAPIの呼び出し
 
-[06_Sqlite]("06_sqlite.html")
+[06_Sqlite]("/06_sqlite.html")
 
 SqliteのChormeなどではセキュリティ上ローカルファイルの参照時にエラー出る。
 
@@ -44,11 +44,11 @@ https://github.com/kripken/sql.js
 
 ### for Redmine
 
-[07_ReactReduxIFrame]("07_ReactReduxIFrame.html")
+[07_ReactReduxIFrame]("/07_ReactReduxIFrame.html")
 
 Redmineと共用しようとするとCSSがぶつかる件の苦肉の策。markdownのレンダリングも合わせて
 
-[08_ReactReduxRedmine]("08_ReactReduxRedmine.html")
+[08_ReactReduxRedmine]("/08_ReactReduxRedmine.html")
 
 View customizes puluginを使用したReact+ReduxのRedmine埋め込み例。
 
