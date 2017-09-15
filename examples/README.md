@@ -1,5 +1,7 @@
 # Pages examples
 
+[View on Pages](https://gitllama.github.io/Pages/examples/)
+
 ## Description
 
 Examples for Pages (Frontend-Code) by JavaScript.
@@ -56,5 +58,9 @@ View customizes puluginを使用したReact+ReduxのRedmine埋め込み例。
 
 - stateのimmutable.jsでの管理
 - Reducerのswitch -> 辞書化
+
+[09_ReactReduxChart](09_ReactReduxChart.html)
+
+チャートの表示。plotlyを使用してます。pythonなどでも使えるのでいいかんじ。
 
 ### JQuery

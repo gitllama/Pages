@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>ReactReduxRedmine</title>
+  <script type="text/javascript">
+  /*dummy*/
+  /*ここから*/
+  </script>
+
+  <script src="https://unpkg.com/react@15.6.1/dist/react.min.js"></script>
+  <script src="https://unpkg.com/react-dom@15.6.1/dist/react-dom.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/redux/3.7.2/redux.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-redux/5.0.6/react-redux.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.38/browser.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/immutable/3.8.1/immutable.min.js"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/3.4.2/js-yaml.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-bootstrap/0.31.2/react-bootstrap.min.js"></script>
+
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+
+  <script type="text/babel">
+
+  let {
+    Button,FormGroup,FormControl,PageHeader, FieldGroup,
+    Grid, Row, Col, Jumbotron, Table,Panel, Label, Alert
+  } = window.ReactBootstrap;
+
+
+  /******** Action, Action Creators ********/
+
+  const usercheck =(i)=>({ type: 'USERCHECK', value: i });
+  const submit =(i)=>({ type: 'SUBMIT', value: i });
+  const onload =()=>({ type: 'ONLOAD'});
+
+
+  /******** Reducers, store ********/
+
+  const defaultState = {
+    userid : "-1",
+    username : "null",
+    onload : false,
+    conditions : "",
+    result : "",
+    data1 : {
+      x: ['１月','２月','３月','４月','５月','６月','７月'],
+      y: [65, 59, 80, 81, 56, 55, 6],
+      type: 'plot',
+      name: 'plot1',
+      line: {shape: 'spline'}
+    },
+    data2 : {
+      x: ['１月','２月','３月','４月','５月','６月','７月'],
+      y: [65, 59, 80, 81, 56, 55, 6],
+      type: 'bar',
+      name: 'bar1'
+    }
+  };
+  const initialState = Immutable.Map(defaultState);
+
+  const reducers = {
+    'ONLOAD' : (state, action) => (
+      state.set('onload', true)
+    ),
+    'SUBMIT' : (state, action) => (
+      state.withMutations(m => (
+        m.set('onload', false)
+        .set('conditions', action.value.conditions)
+    　　.set('result', action.value.result)
+      ))
+    ),
+    "USERCHECK" : (state, action) =>(
+      state.withMutations(m => (
+        m.set('onload', false)
+        .set('userid', action.value.userid)
+    　　.set('username', action.value.username)
+      ))
+    ),
+    "@@redux/INIT" : (state, action) =>(
+      //init時にaction.type = @@redux/INIT呼ばれる
+      state
+    )
+  };
+  const store = Redux.createStore((state = initialState, action)=> {
+    return reducers[action.type]
+      ? reducers[action.type](state, action)
+      : state;
+  });
+
+
+  /******** React Components ********/
+
+  const mapStateToProps =(state)=>({ state: state });
+
+  //app
+
+  var App = ReactRedux.connect(mapStateToProps)( class App extends React.Component {
+    componentDidMount(prevProps, prevState){
+
+      Plotly.plot(
+        ReactDOM.findDOMNode(this.refs.stage),
+        [this.props.state.get('data1'),this.props.state.get('data2')],
+        {
+          title: 'サンプルチャート',
+          titlefont: {size: 12},
+          xaxis: {
+            title: 'A',
+            showgrid: true,
+            //tickformat: xTickFormat
+          },
+          yaxis: {
+            title: 'B',
+            showgrid: true,
+            //range: [0,100]
+          },
+        }
+      );
+
+    }
+    render() {
+      return (
+        <div>
+          <div>
+            <div width="100px" height="100px" ref="stage"></div>
+          </div>
+        </div>
+      );
+    }
+  });
+
+
+  /******** Provider, Render ********/
+  var Provider = ReactRedux.Provider;
+  ReactDOM.render(
+    <Provider store={store}>
+      <App />
+    </Provider>,
+    document.querySelector('#app')
+  );
+
+  </script>
+</head>
+<body>
+  <div id="app"></div>
+</body>
+</html>
