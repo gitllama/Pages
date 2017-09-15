@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>ReactReduxRedmine</title>
+  <title>Chart</title>
   <script type="text/javascript">
   /*dummy*/
   /*ここから*/
@@ -22,63 +22,32 @@
 
   <script type="text/babel">
 
-  let {
-    Button,FormGroup,FormControl,PageHeader, FieldGroup,
-    Grid, Row, Col, Jumbotron, Table,Panel, Label, Alert
-  } = window.ReactBootstrap;
-
 
   /******** Action, Action Creators ********/
 
-  const usercheck =(i)=>({ type: 'USERCHECK', value: i });
-  const submit =(i)=>({ type: 'SUBMIT', value: i });
+  const chartupdate =(i)=>({ type: 'CHARTUPDATE', value: i });
   const onload =()=>({ type: 'ONLOAD'});
 
 
   /******** Reducers, store ********/
 
-  const defaultState = {
-    userid : "-1",
-    username : "null",
+  const initialState = Immutable.Map({
     onload : false,
     conditions : "",
     result : "",
-    data1 : {
-      x: ['１月','２月','３月','４月','５月','６月','７月'],
-      y: [65, 59, 80, 81, 56, 55, 6],
-      type: 'plot',
-      name: 'plot1',
-      line: {shape: 'spline'}
-    },
-    data2 : {
-      x: ['１月','２月','３月','４月','５月','６月','７月'],
-      y: [65, 59, 80, 81, 56, 55, 6],
-      type: 'bar',
-      name: 'bar1'
-    }
-  };
-  const initialState = Immutable.Map(defaultState);
+    chartdata : "null"
+  });
 
   const reducers = {
     'ONLOAD' : (state, action) => (
       state.set('onload', true)
     ),
-    'SUBMIT' : (state, action) => (
+    'CHARTUPDATE' : (state, action) => (
       state.withMutations(m => (
-        m.set('onload', false)
-        .set('conditions', action.value.conditions)
-    　　.set('result', action.value.result)
-      ))
-    ),
-    "USERCHECK" : (state, action) =>(
-      state.withMutations(m => (
-        m.set('onload', false)
-        .set('userid', action.value.userid)
-    　　.set('username', action.value.username)
+        m.set('chartdata', action.value)
       ))
     ),
     "@@redux/INIT" : (state, action) =>(
-      //init時にaction.type = @@redux/INIT呼ばれる
       state
     )
   };
@@ -93,37 +62,83 @@
 
   const mapStateToProps =(state)=>({ state: state });
 
-  //app
 
-  var App = ReactRedux.connect(mapStateToProps)( class App extends React.Component {
-    componentDidMount(prevProps, prevState){
-
-      Plotly.plot(
-        ReactDOM.findDOMNode(this.refs.stage),
-        [this.props.state.get('data1'),this.props.state.get('data2')],
-        {
-          title: 'サンプルチャート',
-          titlefont: {size: 12},
-          xaxis: {
-            title: 'A',
-            showgrid: true,
-            //tickformat: xTickFormat
-          },
-          yaxis: {
-            title: 'B',
-            showgrid: true,
-            //range: [0,100]
-          },
-        }
+  class Chart extends React.Component {
+    componentWillReceiveProps(nextProps){
+      let data = nextProps.data;
+      if(typeof(data) === 'string'){
+        ReactDOM.findDOMNode(this.refs.stage).innerHTML = data;
+      }else{
+        //plotだと重ね書きされてしまう
+        Plotly.newPlot(
+          ReactDOM.findDOMNode(this.refs.stage),
+          data,
+          {
+            title: 'サンプルチャート',
+            //autosize: false,
+            width: this.props.width,
+            height: this.props.height,
+            xaxis: {
+              title: 'A',
+              showgrid: true,
+              //tickformat: xTickFormat
+            },
+            yaxis: {
+              title: 'B',
+              showgrid: true,
+              //range: [0,100]
+              //type: 'log'
+            }
+          }
+        );
+      }
+    }
+    render() {
+      return (
+        <div ref="stage"/>
       );
+    }
+  };
 
+
+  const App = ReactRedux.connect(mapStateToProps)( class App extends React.Component {
+    componentDidMount(){
+
+      for(let i=0;i<1000;i++)
+         this.props.dispatch(chartupdate(`NOW LOADING... ${i}`));
+
+        //  let arr = [2,3,24,126,326];
+        //  act((i) => this.props.dispatch(chartupdate(`NOW LOADING... ${i}`)));
+         //
+        //  function act(callback) {
+        //     if(arr.length==0) return;
+        //     let param = arr[0];
+        //     callback(param);
+        //      arr.shift();
+        //      setTimeout(function(){
+        //          act(callback);
+        //      }, 1000);
+        //  }
+
+      let i = [{
+       x: ['１月','２月','３月','４月','５月','６月','７月'],
+       y: [65, 59, 80, 81, 56, 55, 6],
+       type: 'plot',
+       name: 'plot1',
+       line: {shape: 'spline'}
+      },{
+       x: ['１月','２月','３月','４月','５月','６月','７月'],
+       y: [65, 59, 80, 81, 56, 55, 6],
+       type: 'bar',
+       name: 'bar1'
+      }];
+
+      this.props.dispatch(chartupdate(i));
     }
     render() {
       return (
         <div>
-          <div>
-            <div width="100px" height="100px" ref="stage"></div>
-          </div>
+          <Chart width="640" height="480" data={this.props.state.get("chartdata")}/>
         </div>
       );
     }
@@ -131,7 +146,7 @@
 
 
   /******** Provider, Render ********/
-  var Provider = ReactRedux.Provider;
+  const Provider = ReactRedux.Provider;
   ReactDOM.render(
     <Provider store={store}>
       <App />
