@@ -15,6 +15,9 @@
   <!-- jsx表記するためtext/babel -->
   <script type="text/babel">
 
+  //※React.PropTypes, React.createClassは15.5でDeprecatedになり
+  //それぞれPropTypes, createClassに変更
+
   //[標準的なComponent表記]
   //this.state : 変更可能な状態。setStateでnotificationが立つ
   //this.props : 変更不可な状態。親から指定されたものを参照できる(<>hoge<>はprops.children)
@@ -31,7 +34,7 @@
       todo: React.PropTypes.shape({
         id: React.PropTypes.number,
         value: React.PropTypes.any
-      }),
+      })
     },
     //カスタムバリデータ
     customProp: function(props, propName, componentName) {

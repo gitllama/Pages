@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <script type="text/javascript">
+  /*dummy*/
+  /*ここから*/
+  </script>
+
+  <script src="https://unpkg.com/react@15.6.1/dist/react.min.js"></script>
+  <script src="https://unpkg.com/react-dom@15.6.1/dist/react-dom.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/redux/3.7.2/redux.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-redux/5.0.6/react-redux.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.38/browser.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/immutable/3.8.1/immutable.min.js"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/3.4.2/js-yaml.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-bootstrap/0.31.2/react-bootstrap.min.js"></script>
+
+  <script type="text/babel">
+  let {
+        Button,FormGroup,FormControl,
+        PageHeader, FieldGroup,
+        Grid, Row, Col, Jumbotron, Table,
+        Panel, Label, Alert
+      } = window.ReactBootstrap;
+
+  /******** Action, Action Creators ********/
+
+  const changeinput =(i)=>({ type: 'INPUT', value: i });
+  const onload =()=>({ type: 'ONLOAD'});
+
+
+  /******** Reducers, store ********/
+
+  const initialState = Immutable.Map({
+    onload : false,
+    conditions : "",
+    data : []
+  });
+
+  const reducers = {
+    'ONLOAD' : (state, action) => (
+      state.set('onload', true)
+    ),
+    'INPUT' : (state, action) => (
+      state.withMutations(m =>
+        m.set('data', action.value)
+      )
+    ),
+    "@@redux/INIT" : (state, action) =>(
+      state
+    )
+  };
+  const store = Redux.createStore((state = initialState, action)=> {
+    return reducers[action.type]
+      ? reducers[action.type](state, action)
+      : state;
+  });
+
+
+  /******** Components ********/
+
+  const tablesjson ={
+    "Col_A" : {
+      type : "text",
+      placeholder : "Model"
+    },
+    "Col_B" : {
+      type : "text",
+      placeholder : "Num"
+    },
+    "Col_C" : {
+      type : "text",
+      placeholder : "Model"
+    },
+  }
+
+  /* React Components */
+
+  class TableComponent extends React.Component {
+    constructor(props) {
+      super(props);
+      this.onChangeState = this.onChangeState.bind(this);
+    }
+    propTypes: {
+      onChange: PropTypes.func.isRequired
+    }
+    onChangeState(){
+      let dst = Array.from(Array(this.props.num).keys()).map(index=> {
+        let i = {}
+        for(let n of Object.keys(this.props.header)){
+          i[n] = ReactDOM.findDOMNode(this.refs[`${index}_${n}`]).value;
+        }
+        return i;
+      });
+      this.props.onChange(dst);
+    }
+    componentDidUpdate(prevProps){
+      //row数が変わった時だけ再描画（変更時に限定しないと無限ループ）
+      if(prevProps.num != this.props.num){
+        this.onChangeState();
+      }
+    }
+    render() {
+      const colstd =(index, i)=> Object.keys(i).map(n=>
+        <td><FormControl
+          ref={`${index}_${n}`} type={i[n]["type"]} placeholder={i[n]["placeholder"]}
+          onChange={this.onChangeState}/></td>
+      )
+      const colstdo =(index, i, src)=> Object.keys(i).map(n=>
+        <td>{src[index][n]}</td>
+      )
+      switch(this.props.type){
+        case "header":
+          return (
+            <thead>
+              <tr>
+                <th>#</th>
+                {Object.keys(this.props.header).map(n=> <th>{n}</th>)}
+              </tr>
+            </thead>
+          )
+        case "form":
+          return (
+            <tbody>{
+              Array.from(Array(this.props.num).keys()).map(index=> (
+                <tr>
+                  <td>{index + 1}</td>
+                  {colstd(index, this.props.header)}
+                </tr>
+              ))
+            }</tbody>
+          )
+        default:
+          return (
+            <tbody>{
+              this.props.src.map((n, index)=> (
+                <tr>
+                  <td>{index + 1}</td>
+                  {colstdo(index, this.props.header, this.props.src)}
+                </tr>
+              ))
+            }</tbody>
+          )
+      }
+    }
+  }
+
+  class IFrameComponent extends React.Component {
+    constructor(props) {
+      super(props);
+      this.header = (()=>{/*
+        <html lang="en">
+        <head>
+          <meta charset="UTF-8">
+          <title>iframe</title>
+          <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/latest/css/bootstrap.min.css">
+          <style type="text/css">
+          .sheet {
+            page-break-after: always;
+          }
+          @page {
+            size: A4;
+            margin: 0;
+          }
+          @media print {
+            body {
+              width:  210mm;
+              height: 296mm;
+            }
+            .nonprint {
+              display: none;
+            }
+          }
+          </style>
+        </head>
+        <body>
+        <input class="nonprint" type="button" value="print" onclick="window.print()"/>
+      */}).toString().match(/\/\*([^]*)\*\//)[1];
+      this.footer = "</body>"
+    }
+    componentDidUpdate(prevProps, prevState){
+      ReactDOM.findDOMNode(this.refs.uframe).srcdoc
+      = this.header
+      + ReactDOM.findDOMNode(this.refs.target).innerHTML
+      + this.footer;
+    }
+    render() {
+      return (
+        <div>
+          <iframe ref="uframe"
+            width={this.props.width}
+            height={this.props.height}
+            style={this.props.style} />
+          <div ref="target" style={{display:"none"}}>
+            {this.props.children}
+          </div>
+        </div>
+      );
+    }
+  }
+
+
+  /* ReactRedux Components */
+
+  const mapStateToProps =(state)=>({ state: state });
+
+  const InputComponent = ReactRedux.connect(mapStateToProps)( class InputComponent extends React.Component {
+    constructor(props) {
+      super(props);
+      this.maxrow = 8;
+      this.state={
+        num : 1
+      };
+      this.value = null;
+      this.onChangeState = this.onChangeState.bind(this);
+    }
+    addrow(){
+      if(this.state.num < this.maxrow) this.setState({ num : this.state.num+1});
+    }
+    delrow(){
+      if(this.state.num > 1) this.setState({ num : this.state.num-1});
+    }
+    submit(){
+      this.props.dispatch(
+        changeinput(this.value)
+      );
+    }
+    onChangeState(e){
+      this.value = e;
+      this.props.dispatch(
+        changeinput(this.value)
+      );
+      //this.setState({ value : this.state.value.splice(e.index, 1, e.value)});
+      //.slice(0, this.state.num)
+    }
+    render() {
+      const rows =(i)=> Array.from(Array(i).keys()).map(n=>{
+        return (
+          <TableComponent type="form" header={tablesjson} num={n} onChange={this.onChangeState}/>
+        );
+      });
+      return (
+        <div>
+          <div>
+            <Table striped bordered condensed hover>
+              <TableComponent type="header" header={tablesjson}/>
+              <TableComponent type="form" num={this.state.num} header={tablesjson}
+                onChange={this.onChangeState}/>
+            </Table>
+            <Button onClick={true ? this.addrow.bind(this) : null}>+</Button>
+            <Button onClick={true ? this.delrow.bind(this) : null}>-</Button>
+          </div>
+        </div>
+      );
+    }
+  });
+
+  const OutputComponent = ReactRedux.connect(mapStateToProps)( class OutputComponent extends React.Component {
+    render() {
+      return (
+          <IFrameComponent width="100%" height="320" style={{border:"none"}}>
+            <Table striped bordered condensed hover>
+              <TableComponent type="header" header={tablesjson}/>
+              <TableComponent type="" header={tablesjson} src={this.props.state.get('data')}/>
+            </Table>
+          </IFrameComponent>
+      );
+    }
+  });
+
+  const App = ReactRedux.connect(mapStateToProps)( class App extends React.Component {
+    render() {
+      return (
+        <div>
+          <h2>Input Form</h2>
+          <InputComponent/>
+          <hr/>
+          <h2>JSON</h2>
+          {JSON.stringify(this.props.state.get('data'))}
+          <h2>OUTPUT</h2>
+          <OutputComponent/>
+        </div>
+      );
+    }
+  });
+
+  /******** Provider, Render ********/
+  const Provider = ReactRedux.Provider;
+  ReactDOM.render(
+    <Provider store={store}>
+      <App />
+    </Provider>,
+    document.querySelector('#app')
+  );
+
+  </script>
+</head>
+<body>
+  <div id="app"></div>
+</body>
+</html>
