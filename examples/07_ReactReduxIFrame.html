@@ -102,11 +102,30 @@
         <head>
           <meta charset="UTF-8">
           <title>iframe</title>
-          <link href="https://maxcdn.bootstrapcdn.com/bootstrap/latest/css/bootstrap.min.css" rel="stylesheet"></link>
+          <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/2.8.0/github-markdown.min.css">
+        <style type="text/css">
+          .sheet {
+            page-break-after: always;
+          }
+          @page {
+            size: A4;
+            margin: 0;
+          }
+          @media print {
+            body {
+              width:  210mm;
+              height: 296mm;
+            }
+            .nonprint {
+              display: none;
+            }
+          }
+          </style>
         </head>
         <body>
+        <input class="nonprint" type="button" value="print" onclick="window.print()"/>
       */}).toString().match(/\/\*([^]*)\*\//)[1];
-      this.footer = "</body>"
+      this.footer = "</body></html>"
     }
     componentDidUpdate(prevProps, prevState){
       //インラインにsrcdoc={}書いてもReactでは反応しないので
@@ -126,6 +145,17 @@
 
       //document.createElementで操作してもよい
     }
+    printframe(){
+      //外部に印刷ボタンを設置する場合
+      let win = window.open("","newwin",null);
+      win.document.write(
+        this.header
+        + ReactDOM.findDOMNode(this.refs.target).innerHTML
+        + this.footer
+      );
+      win.onload =()=> win.print();
+      win.document.close();
+    }
     render() {
       //ref="main"は表示したくない時はstyle={{display:"none"}}すればよし
       return (
@@ -140,6 +170,7 @@
             width={this.props.width}
             height={this.props.height}
             style={this.props.style} />
+          <button onClick={this.printframe.bind(this)}>print</button>
         </div>
       );
     }
@@ -160,6 +191,7 @@
       this.props.dispatch(changemarkdown(defaultmarkdown));
     }
     render() {
+      //className="markdown-body"でmarkdownのスタイル適用
       return (
         <div>
           <div>
@@ -170,7 +202,7 @@
             <Jumbotron style={{padding:"15px"}}>
               <h3>Result</h3>
             </Jumbotron>
-            <div dangerouslySetInnerHTML={{__html: this.props.state.html}}/>
+            <div className="markdown-body" dangerouslySetInnerHTML={{__html: this.props.state.html}}/>
           </IFrameComponent>
         </div>
       );

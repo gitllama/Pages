@@ -261,10 +261,12 @@
     render() {
       return (
           <IFrameComponent width="100%" height="320" style={{border:"none"}}>
-            <Table striped bordered condensed hover>
-              <TableComponent type="header" header={tablesjson}/>
-              <TableComponent type="" header={tablesjson} src={this.props.state.get('data')}/>
-            </Table>
+            <section style={{pageBreakAfter : 'always'}}>
+              <Table striped bordered condensed hover>
+                <TableComponent type="header" header={tablesjson}/>
+                <TableComponent type="" header={tablesjson} src={this.props.state.get('data')}/>
+              </Table>
+            </section>
           </IFrameComponent>
       );
     }

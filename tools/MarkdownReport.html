@@ -124,6 +124,7 @@
           <title>iframe</title>
           <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/2.8.0/github-markdown.min.css">
         </head>
+        <body>
       */}).toString().match(/\/\*([^]*)\*\//)[1];
     }
     componentDidMount(){
@@ -134,13 +135,12 @@
     componentDidUpdate(prevProps, prevState){
       ReactDOM.findDOMNode(this.refs.uframe).srcdoc
        = this.header
-       + "<body>"
        + ReactDOM.findDOMNode(this.refs.main).innerHTML
        + "</body></html>";
     }
     printa(){
         let win = window.open("","newwin",null);
-        win.document.write(this.header + "<body>" + ReactDOM.findDOMNode(this.refs.main).innerHTML + "</body>");
+        win.document.write(this.header + ReactDOM.findDOMNode(this.refs.main).innerHTML + "</body></html>");
         win.onload =()=> win.print();
         win.document.close();
     }
