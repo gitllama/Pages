@@ -19,7 +19,7 @@
 
   <script type="text/babel">
   let {
-        Button,FormGroup,FormControl,
+        Button,FormGroup,FormControl,Form,ControlLabel,
         PageHeader, FieldGroup,
         Grid, Row, Col, Jumbotron, Table,
         Panel, Label, Alert
@@ -36,7 +36,9 @@
   const initialState = Immutable.Map({
     onload : false,
     conditions : "",
-    data : []
+    data : {
+      detail : []
+    },
   });
 
   const reducers = {
@@ -53,6 +55,7 @@
     )
   };
   const store = Redux.createStore((state = initialState, action)=> {
+    console.log(action.type, action.value)
     return reducers[action.type]
       ? reducers[action.type](state, action)
       : state;
@@ -60,7 +63,16 @@
 
 
   /******** Components ********/
-
+  const formjson ={
+    "Name" : {
+      type : "text",
+      placeholder : "Model"
+    },
+    "Addr" : {
+      type : "text",
+      placeholder : "A/B/C"
+    }
+  }
   const tablesjson ={
     "Col_A" : {
       type : "text",
@@ -77,6 +89,63 @@
   }
 
   /* React Components */
+
+  class FormComponent extends React.Component {
+    constructor(props) {
+      super(props);
+      this.onChangeState = this.onChangeState.bind(this);
+    }
+    propTypes: {
+      onChange: PropTypes.func.isRequired
+    }
+    onChangeState(){
+      let dst = {};
+      for(let i of Object.keys(this.props.src)){
+        dst[i] = ReactDOM.findDOMNode(this.refs[`form_${i}`]).value;
+      }
+      this.props.onChange(dst);
+    }
+    render() {
+      switch(this.props.type){
+        case "form":
+          return (
+            <table>
+            <tbody>
+              {Object.keys(this.props.src).map(i=>(
+                <tr>
+                  <td style={{textAlign:"right"}} >
+                    { i + " : " }
+                  </td>
+                  <td>
+                    <FormControl
+                      ref={`form_${i}`}
+                      type={this.props.src[i].type}
+                      placeholder={this.props.src[i].placeholder}
+                      onChange={this.onChangeState} />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+            </table>
+          )
+        default:
+          return (
+            <Grid>
+              {Object.keys(this.props.header).map(i=>(
+                <Row>
+                  <Col sm={2}>
+                    {i + " : "}
+                  </Col>
+                  <Col sm={10}>
+                    {this.props.src[i]}
+                  </Col>
+                </Row>
+              ))}
+            </Grid>
+          )
+      }
+    }
+  }
 
   class TableComponent extends React.Component {
     constructor(props) {
@@ -213,7 +282,6 @@
       this.state={
         num : 1
       };
-      this.value = null;
       this.onChangeState = this.onChangeState.bind(this);
     }
     addrow(){
@@ -222,32 +290,45 @@
     delrow(){
       if(this.state.num > 1) this.setState({ num : this.state.num-1});
     }
-    submit(){
-      this.props.dispatch(
-        changeinput(this.value)
-      );
-    }
-    onChangeState(e){
-      this.value = e;
-      this.props.dispatch(
-        changeinput(this.value)
-      );
+    onChangeState(type,e){
+      switch(type){
+        case "form":
+          this.props.dispatch(
+            changeinput({
+                ...e,
+                detail : this.props.state.get('data').detail
+            })
+          )
+          break;
+        case "table":
+          this.props.dispatch(
+            changeinput({
+                ...this.props.state.get('data'),
+                detail : e
+            })
+          )
+          break;
+        default:
+          break;;
+      }
+
       //this.setState({ value : this.state.value.splice(e.index, 1, e.value)});
       //.slice(0, this.state.num)
+      // const rows =(i)=> Array.from(Array(i).keys()).map(n=>{
+      //   return (
+      //     <TableComponent type="form" header={tablesjson} num={n} onChange={this.onChangeStateTable}/>
+      //   );
+      // });
     }
     render() {
-      const rows =(i)=> Array.from(Array(i).keys()).map(n=>{
-        return (
-          <TableComponent type="form" header={tablesjson} num={n} onChange={this.onChangeState}/>
-        );
-      });
       return (
         <div>
           <div>
+            <FormComponent type="form" src={formjson} onChange={(n)=>this.onChangeState("form",n)}/>
             <Table striped bordered condensed hover>
               <TableComponent type="header" header={tablesjson}/>
               <TableComponent type="form" num={this.state.num} header={tablesjson}
-                onChange={this.onChangeState}/>
+                onChange={(n)=>this.onChangeState("table",n)}/>
             </Table>
             <Button onClick={true ? this.addrow.bind(this) : null}>+</Button>
             <Button onClick={true ? this.delrow.bind(this) : null}>-</Button>
@@ -262,9 +343,10 @@
       return (
           <IFrameComponent width="100%" height="320" style={{border:"none"}}>
             <section style={{pageBreakAfter : 'always'}}>
+              <FormComponent type="" header={formjson} src={this.props.state.get('data')} />
               <Table striped bordered condensed hover>
                 <TableComponent type="header" header={tablesjson}/>
-                <TableComponent type="" header={tablesjson} src={this.props.state.get('data')}/>
+                <TableComponent type="" header={tablesjson} src={this.props.state.get('data').detail}/>
               </Table>
             </section>
           </IFrameComponent>
