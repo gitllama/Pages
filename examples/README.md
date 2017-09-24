@@ -46,9 +46,13 @@ https://github.com/kripken/sql.js
 
 ### for Redmine
 
-[07_ReactReduxIFrame](07_ReactReduxIFrame.html)
+[07-1_ReactReduxIFrame](07-1_ReactReduxIFrame.html)
+[07-2_ReactReduxIShadowDOM](07-2_ReactReduxIShadowDOM.html)
 
 Redmineと共用しようとするとCSSがぶつかる件の苦肉の策。markdownのレンダリングも合わせて
+
+iFreamをShadowDOMで書き換えたもの。
+
 
 [08_ReactReduxRedmine](08_ReactReduxRedmine.html)
 
