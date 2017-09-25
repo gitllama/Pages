@@ -3,24 +3,43 @@
 <head>
   <meta charset="UTF-8">
   <title>ReactReduxIFrame</title>
+
+  <script src="https://unpkg.com/react@15.6.1/dist/react.min.js"></script>
+  <script src="https://unpkg.com/react-dom@15.6.1/dist/react-dom.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/redux/3.7.2/redux.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-redux/5.0.6/react-redux.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.38/browser.min.js"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/marked/0.3.5/marked.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-bootstrap/0.31.2/react-bootstrap.min.js"></script>
+
+  <style type="text/css">
+    .sheet {
+      page-break-after: always;
+    }
+    @page {
+      size: A4;
+      margin: 0;
+    }
+    @media print {
+      body {
+        width:  210mm;
+        height: 296mm;
+      }
+      .nonprint {
+        display: none;
+      }
+    }
+  </style>
+
 </head>
 
-<script src="https://unpkg.com/react@15.6.1/dist/react.min.js"></script>
-<script src="https://unpkg.com/react-dom@15.6.1/dist/react-dom.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/redux/3.7.2/redux.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/react-redux/5.0.6/react-redux.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.38/browser.min.js"></script>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/3.4.2/js-yaml.min.js"></script>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/0.3.5/marked.min.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/react-bootstrap/0.31.2/react-bootstrap.min.js"></script>
 
 <body>
   <div id="app"></div>
   <script type="text/babel">
 
-  //改行込文字列指定のテクニック
   let defaultmarkdown =
           "# TITLE\r\n\r\n"
         + "|a|b|\r\n"
@@ -61,7 +80,7 @@
       default:
         break;
     }
-    return Object.assign({}, state);
+    return {...state}//Object.assign({}, state);
   }
 
   var store = Redux.createStore(Reducers);
@@ -94,9 +113,10 @@
 
   //IFrameComponent
 
-  class IFrameComponent extends React.Component {
+  class ShadowDOMComponent extends React.Component {
     constructor(props) {
       super(props);
+      this.flag = document.createElement('div').attachShadow ? true : false;
       this.header = (()=>{/*
         <html lang="en">
         <head>
@@ -128,52 +148,34 @@
       this.footer = "</body></html>"
     }
     componentDidUpdate(prevProps, prevState){
+      const newdom = ReactDOM.render(<div>{this.props.children}</div>, document.createElement('div')).innerHTML;
+      //ref="shadowdom"の子要素に設定してhost.innerHTMLから読み出してもよい
 
-
-      const host = ReactDOM.findDOMNode(this.refs.uframe);
-      const root = host.attachShadow({mode: 'open'});
-      //root.textContent
-      root.innerHTML = this.header
-            + ReactDOM.findDOMNode(this.refs.target).innerHTML
-            + this.footer;
-  }
-    printframe(){
-      //外部に印刷ボタンを設置する場合
-      let win = window.open("","newwin",null);
-      win.document.write(
-        this.header
-        + ReactDOM.findDOMNode(this.refs.target).innerHTML
-        + this.footer
-      );
-      win.onload =()=> win.print();
-      win.document.close();
+      if(this.flag){
+        const host = ReactDOM.findDOMNode(this.refs.shadowdom);
+        const root = host.attachShadow({mode: 'open'});
+        root.innerHTML =
+          '<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/2.8.0/github-markdown.min.css">'
+          + newdom;
+      }else{
+        //※IEはsrcdocにも対応してないので結局何も映らない
+        ReactDOM.findDOMNode(this.refs.uframe).srcdoc = this.header　+ newdom　+ this.footer;
+      }
     }
     render() {
-      //ref="main"は表示したくない時はstyle={{display:"none"}}すればよし
-      return (
-        <div>
-          <h3>without bootstrap</h3>
-          <div ref="target">
-            {this.props.children}
-          </div>
-          <hr/>
-          <h3>with bootstrap and iframe</h3>
-          <div ref="uframe">Hello, world!</div>
-          <button onClick={this.printframe.bind(this)}>print</button>
-        </div>
-      );
+      if(this.flag){
+        return (
+          <div ref="shadowdom"/>
+        );
+      }else{
+        return (
+          <iframe ref="uframe" srcdoc="<p>a</p>"/>
+        );
+      }
     }
   }
 
   //app
-
-  //更新されたmarkdownの描画はcomponentWillReceivePropsで
-  //ReactDOM.findDOMNode(this.refs.hoge).innerHTML = nextProps.state.html
-  //としてもできるがdangerouslySetInnerHTML使用
-  // let hoge = document.createElement("div");
-  // hoge.innerHTML = marked(action.value);
-  // state.html = hoge
-  //とobjをstateに直接持つ方法もNG
 
   class uApp extends React.Component {
     componentDidMount(){
@@ -183,16 +185,16 @@
       //className="markdown-body"でmarkdownのスタイル適用
       return (
         <div>
-          <div>
+          <div className="nonprint">
             <InputComponent />
           </div>
           <hr/>
-          <IFrameComponent  width="100%" height="500" style={{border:"none"}}>
+          <ShadowDOMComponent  width="100%" height="500" style={{border:"none"}}>
             <Jumbotron style={{padding:"15px"}}>
               <h3>Result</h3>
             </Jumbotron>
             <div className="markdown-body" dangerouslySetInnerHTML={{__html: this.props.state.html}}/>
-          </IFrameComponent>
+          </ShadowDOMComponent>
         </div>
       );
     }
