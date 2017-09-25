@@ -107,8 +107,10 @@
   }
 
   //[lifecycle]
-  //  非同期処理を行う際は if(this.isMounted()) { this.setState({data: res.body.data});
-  //  でUnmountされてないか確認しとかないとエラーでることあるよ
+  // 非同期処理を行う際はUnmountされてないか確認する為
+  // if(this.isMounted()) { this.setState({data: res.body.data});
+  // 必要（だが関数廃止されるので自分でwillMount-didMountに
+  // this._isMounted変数作って管理必要）
   class ComponentLifecycle extends React.Component {
     constructor(props) {
       super(props);
