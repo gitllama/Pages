@@ -46,7 +46,7 @@ https://github.com/kripken/sql.js
 
 ### for Redmine
 
-[07-1_ReactReduxIFrame](07-1_ReactReduxIFrame.html)
+[07-1_ReactReduxIFrame](07-1_ReactReduxIFrame.html)  
 [07-2_ReactReduxIShadowDOM](07-2_ReactReduxIShadowDOM.html)
 
 Redmineと共用しようとするとCSSがぶつかる件の苦肉の策。markdownのレンダリングも合わせて
@@ -66,5 +66,3 @@ View customizes puluginを使用したReact+ReduxのRedmine埋め込み例。
 [09_ReactReduxChart](09_ReactReduxChart.html)
 
 チャートの表示。plotlyを使用してます。pythonなどでも使えるのでいいかんじ。
-
-### JQuery

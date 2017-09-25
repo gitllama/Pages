@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>ReactReduxIFrame</title>
+  <title>ReactReduxShadowDOM</title>
 
   <script src="https://unpkg.com/react@15.6.1/dist/react.min.js"></script>
   <script src="https://unpkg.com/react-dom@15.6.1/dist/react-dom.min.js"></script>
@@ -146,22 +146,19 @@
         <input class="nonprint" type="button" value="print" onclick="window.print()"/>
       */}).toString().match(/\/\*([^]*)\*\//)[1];
       this.footer = "</body></html>"
-      this._root = null;
+      this.style = '<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/2.8.0/github-markdown.min.css">';
+      this.root = null;
     }
     componentDidMount(){
-      console.log("b")
       const host = ReactDOM.findDOMNode(this.refs.shadowdom);
-      this._root = host.attachShadow({mode: 'closed'});
+      this.root = host.attachShadow({mode: 'closed'});
     }
     componentDidUpdate(prevProps, prevState){
-      console.log("a")
       const newdom = ReactDOM.render(<div>{this.props.children}</div>, document.createElement('div')).innerHTML;
       //ref="shadowdom"の子要素に設定してhost.innerHTMLから読み出してもよい
-
       if(this.flag){
-        this._root.innerHTML =
-          '<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/2.8.0/github-markdown.min.css">'
-          + newdom;
+        //link使用できるか要確認
+        this.root.innerHTML =this.style + newdom;
       }else{
         //※IEはsrcdocにも対応してないので結局何も映らない
         ReactDOM.findDOMNode(this.refs.uframe).srcdoc = this.header　+ newdom　+ this.footer;
@@ -174,7 +171,7 @@
         );
       }else{
         return (
-          <iframe ref="uframe" srcdoc="<p>a</p>"/>
+          <iframe ref="uframe"/>
         );
       }
     }
