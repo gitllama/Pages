@@ -146,15 +146,20 @@
         <input class="nonprint" type="button" value="print" onclick="window.print()"/>
       */}).toString().match(/\/\*([^]*)\*\//)[1];
       this.footer = "</body></html>"
+      this._root = null;
+    }
+    componentDidMount(){
+      console.log("b")
+      const host = ReactDOM.findDOMNode(this.refs.shadowdom);
+      this._root = host.attachShadow({mode: 'closed'});
     }
     componentDidUpdate(prevProps, prevState){
+      console.log("a")
       const newdom = ReactDOM.render(<div>{this.props.children}</div>, document.createElement('div')).innerHTML;
       //ref="shadowdom"の子要素に設定してhost.innerHTMLから読み出してもよい
 
       if(this.flag){
-        const host = ReactDOM.findDOMNode(this.refs.shadowdom);
-        const root = host.attachShadow({mode: 'open'});
-        root.innerHTML =
+        this._root.innerHTML =
           '<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/2.8.0/github-markdown.min.css">'
           + newdom;
       }else{
