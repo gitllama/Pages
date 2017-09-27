@@ -106,6 +106,13 @@
     }
   }
 
+  //React 0.14より
+  const HelloWorld3 = props =>(
+    <div>
+      {props.src}
+    </div>
+  );
+
   //[lifecycle]
   // 非同期処理を行う際はUnmountされてないか確認する為
   // if(this.isMounted()) { this.setState({data: res.body.data});
@@ -138,6 +145,7 @@
           <HelloWorld  name={"React!"}>children</HelloWorld>
           <HelloWorld2 name={"React!?"}
                        onChange={(e)=> console.log(e.value)}/>
+          <HelloWorld3 src={"HelloReact"} />
         </div>
       );
     }
