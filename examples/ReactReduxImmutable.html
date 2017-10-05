@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+
+  <script type="text/javascript">
+  /*dummy*/
+  /*ここから*/
+  </script>
+
+  <script src="https://unpkg.com/react@15.6.1/dist/react.min.js"></script>
+  <script src="https://unpkg.com/react-dom@15.6.1/dist/react-dom.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/redux/3.7.2/redux.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-redux/5.0.6/react-redux.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.38/browser.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/immutable/3.8.1/immutable.min.js"></script>
+
+  <script type="text/babel">
+
+  /******** Action, Action Creators ********/
+
+  window.set =(key, val)=>({ type: 'SET', key : key, value : val});
+  window.setin =(key, val)=>({ type: 'SETIN', key : key, value : val});
+  window.merge =(val)=>({ type: 'MERGE', value : val});
+  window.replace =(key, val)=>({ type: 'Replace',  key : key, value : val});
+
+  /******** Reducers, store ********/
+
+  const initialState = Immutable.Map({ });
+
+  window.defaultReducers = {
+    ['SET'] : (state, action) => (
+      state.set(action.key, action.value)
+    ),
+    ['SETIN'] : (state, action) => (
+      state.setIn(action.key, action.value)
+    ),
+    ['Replace'] : (state, action) => {
+      return state.withMutations(m =>
+        m.delete(action.key)
+         .set(action.key, action.value)
+        //反応しない
+      )
+    },
+    ['MERGE'] : (state, action) => (
+      state.withMutations(m =>
+        m.mergeDeep(action.value)
+        //mergeDeepInだと反応しない
+      )
+    ),
+    "@@redux/INIT" : (state, action) =>(
+      state
+    )
+  };
+
+  window.reducers = defaultReducers;
+  window.store = Redux.createStore((state = initialState, action)=> {
+    console.log(action)
+    return reducers[action.type]
+      ? reducers[action.type](state, action)
+      : state;
+  });
+  window.mapStateToProps =(state)=>({ state: state });
+
+  /******** Components ********/
+
+  /* ReactRedux Components */
+
+  window.ShadowDOMComponent =(class ShadowDOMComponent extends React.Component {
+    constructor(props) {
+      super(props);
+      this.style = '<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/latest/css/bootstrap.min.css">';
+      this.root = null;
+    }
+    componentDidMount(){
+      const host = ReactDOM.findDOMNode(this.refs.shadowdom);
+      this.root = host.attachShadow({mode: 'open'});
+      this.root.innerHTML = this.style + "<div>" + ReactDOM.findDOMNode(this.refs.shadowdom).innerHTML + "</div>";
+    }
+    componentDidUpdate(prevProps, prevState){
+      this.root.innerHTML = this.style + "<div>" + ReactDOM.findDOMNode(this.refs.shadowdom).innerHTML + "</div>";
+    }
+    render() { return (
+        <div ref="shadowdom">
+          {this.props.children}
+        </div>
+    )}
+  });
+
+
+  /******** Provider, Render ********/
+
+  const App = ReactRedux.connect(mapStateToProps)( class App extends React.Component {
+    constructor(props) {
+      super(props);
+
+    }
+    render() { return (
+      <div>
+          <input
+            type="text"
+            onChange={(e)=>this.props.dispatch(set("A",e.target.value))} />
+          <br/>
+          <input
+            type="text"
+            onChange={(e)=>this.props.dispatch(setin(["B","B"],e.target.value))} />
+          <br/>
+          <input
+            type="text"
+            onChange={(e)=>this.props.dispatch(setin(["A","C"],e.target.value))} />
+          <br/>
+          <input
+            type="text"
+            onChange={(e)=>this.props.dispatch( merge({"B" : {"C" : e.target.value}}))} />
+          <br/>
+          <input
+            type="text"
+            onChange={(e)=>this.props.dispatch(replace("B", {"C" : e.target.value}))} />
+          <br/>
+          <input
+            type="text"
+            onChange={(e)=>this.props.dispatch(setin(["B","D"],e.target.value))} />
+
+        <div>
+          <p>1:{this.props.state.get("A")}</p>
+          <p>2:{this.props.state.get('B')}</p>
+          <p>3:{this.props.state.getIn(['B'])}</p>
+          <p>3:{this.props.state.getIn(['B', 'C'])}</p>
+          <p>4:{this.props.state.getIn(['A','B'])}</p>
+          <p>4:{this.props.state.getIn(['A','C'])}</p>
+          <p>5:{JSON.stringify(this.props.state.get('A'))}</p>
+          <p>6:{JSON.stringify(this.props.state)}</p>
+        </div>
+      </div>
+    )}
+  });
+
+
+  ReactDOM.render(
+    <ReactRedux.Provider store={store}>
+      <App />
+    </ReactRedux.Provider>,
+    document.getElementById('app')
+  );
+
+  </script>
+</head>
+<body>
+  <div id="app"/>
+</body>
+</html>
