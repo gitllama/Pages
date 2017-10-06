@@ -41,9 +41,10 @@
     ['Delete'] : (state, action) => state.delete(action.key),
     ['DeleteIn'] : (state, action) => state.deleteIn(action.key),
 
-    //mergeは別objectを生成。同一objectを書き換えるときはmergeDeep。
+    //mergeは別objectを生成。同一object内を書き換えるときはmergeDeep。
     //値の上にObjectを上書きしようとするとmergeできないので
     //setで直接値のみを書き換えるかReplaceにした方が良い
+    //(immutableであることにメリットを見出すならReplaceは感心しない
     ['MERGE'] : (state, action) => state.mergeDeep(action.value),
     ['MERGEIN'] : (state, action) => state.mergeDeepIn(action.key, action.value),
 
