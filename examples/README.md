@@ -18,6 +18,10 @@ Examples for Pages (Frontend-Code) by JavaScript.
 
 React+Reduxをnode.jpを使用せずフロントエンドとCDNのみで記述しています。環境構築の手間がなく開発環境を選びませんが、あまり行儀が良い気はしましません。
 
+[03_ReactReduxImmutable.html](03_ReactReduxImmutable.html)
+
+React+Redux+Immutableで変数管理
+
 [04_TableRender](04_TableRender.html)
 
 Yamlデータに対するReact+Reduxでのリアルタイムレンダリング + 遷移先レンダリング
