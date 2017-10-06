@@ -42,11 +42,12 @@
     ['DeleteIn'] : (state, action) => state.deleteIn(action.key),
 
     //mergeは別objectを生成。同一object内を書き換えるときはmergeDeep。
+    //速度的には マルチset > merge > mergeDeep
     //値の上にObjectを上書きしようとするとmergeできないので
     //setで直接値のみを書き換えるかReplaceにした方が良い
     //(immutableであることにメリットを見出すならReplaceは感心しない
-    ['MERGE'] : (state, action) => state.mergeDeep(action.value),
-    ['MERGEIN'] : (state, action) => state.mergeDeepIn(action.key, action.value),
+    ['MERGE'] : (state, action) => state.merge(action.value),
+    ['MERGEIN'] : (state, action) => state.mergeIn(action.key, action.value),
 
     //state.setIn(action.key, Immutable.Map(action.value))
     //でもよい。こっちの方がオーバーヘッドは少ないかも（確認してない
