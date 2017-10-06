@@ -156,6 +156,7 @@
     componentDidUpdate(prevProps, prevState){
       const newdom = ReactDOM.render(<div>{this.props.children}</div>, document.createElement('div')).innerHTML;
       //ref="shadowdom"の子要素に設定してhost.innerHTMLから読み出してもよい
+      //VirtualDOMだと生成前に読むことがありむしろそちらでないと動かない
       if(this.flag){
         //link使用できるか要確認
         this.root.innerHTML =this.style + newdom;
