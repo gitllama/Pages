@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Sqlite</title>
+</head>
+
+<script src="https://unpkg.com/react@15.6.1/dist/react.min.js"></script>
+<script src="https://unpkg.com/react-dom@15.6.1/dist/react-dom.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/redux/3.7.2/redux.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-redux/5.0.6/react-redux.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.38/browser.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/immutable/3.8.1/immutable.min.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/react-bootstrap/0.31.2/react-bootstrap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/0.4.0/js/sql.js"></script>
+
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/latest/css/bootstrap.min.css">
+
+<body>
+  <div id="app" />
+  <script type="text/babel">
+
+  //if open local chrome , --allow-file-access-from-files
+
+  const tablename = "'CD'";
+
+  /******** Action, Action Creators ********/
+
+  const set =(key, val)=>({ type: 'SET', key : key, value : val});
+  const setin =(keys, val)=>({ type: 'SETIN', key : keys, value : val});
+  const del =(key)=>({ type: 'Delete',  key : key});
+  const delin =(keys)=>({ type: 'DeleteIn',  key : keys});
+  const merge =(val)=>({ type: 'MERGE', value : val});
+  const mergein =(keys, val)=>({ type: 'MERGEIN', key : keys, value : val});
+  const replace =(key, val)=>({ type: 'Replace',  key : key, value : val});
+
+  /******** Reducers, store ********/
+
+  const initialState = Immutable.Map({
+    sqlfilename : "mCDs.db3",
+    list : ["null"],
+    db : null
+  });
+  const reducers = {
+    ['SET'] : (state, action) => state.set(action.key, action.value),
+    ['SETIN'] : (state, action) => state.setIn(action.key, action.value),
+    ['Delete'] : (state, action) => state.delete(action.key),
+    ['DeleteIn'] : (state, action) => state.deleteIn(action.key),
+
+    ['MERGE'] : (state, action) => state.mergeDeep(action.value),
+    ['MERGEIN'] : (state, action) => state.mergeDeepIn(action.key, action.value),
+
+    ['Replace'] : (state, action) => state.withMutations(m =>
+        m.deleteIn(action.key).mergeDeepIn(action.key, action.value)
+    ),
+
+    "@@redux/INIT" : (state, action) =>(
+      state
+    )
+  };
+  const store = Redux.createStore((state = initialState, action)=> {
+    console.log(action.type,action)
+    return reducers[action.type]
+      ? reducers[action.type](state, action)
+      : state;
+  });
+  const mapStateToProps =(state)=>({ state: state });
+
+  const Controller = ReactRedux.connect(mapStateToProps)(class Controller extends React.Component {
+    onRead(e) {
+      let reader = new FileReader();
+      reader.onload = function(evt){
+        let bytes = new Uint8Array(evt.target.result);
+        let db = new SQL.Database(bytes);
+        this.props.dispatch(set("db", db));
+
+        let table = db.exec(`SELECT DISTINCT Artist FROM ${tablename}`);
+        let ary = table[0].values.map((n)=>n[0]);
+        //ary.unshift('%');
+        this.props.dispatch(set("list", ary));
+
+      }.bind(this)
+      reader.readAsArrayBuffer(e);
+    }
+    onSubmit(e){
+      let dst = "";
+      let str = ReactDOM.findDOMNode(this.refs.inputText).value;
+      if(str != '')
+        dst = `WHERE Artist LIKE '${str}'`
+
+      let db = this.props.state.get("db")
+      let table = db.exec(`SELECT * FROM ${tablename} ${dst}`);//db.run(sqlstr);
+      this.props.dispatch(set("table", table));
+    }
+    render() {
+      const listview =(n)=> n.map( m => <option>{m}</option>);
+      return (
+        <ReactBootstrap.Form horizontal>
+          <ReactBootstrap.FormGroup>
+            <ReactBootstrap.Col xsOffset={2} xs={10}>
+              <input ref="inputfile" type="file" onChange={(e)=>this.onRead(ReactDOM.findDOMNode(this.refs.inputfile).files[0])}/>
+            </ReactBootstrap.Col>
+          </ReactBootstrap.FormGroup>
+          <ReactBootstrap.FormGroup controlId="formControlsSelect">
+            <ReactBootstrap.Col componentClass={ReactBootstrap.ControlLabel} xs={2}>
+              key select
+            </ReactBootstrap.Col>
+            <ReactBootstrap.Col xs={8}>
+              <ReactBootstrap.FormControl type="text" list="keylist" ref="inputText"/>
+              <ReactBootstrap.HelpBlock>Wildcard : %, ex: HOGE% </ReactBootstrap.HelpBlock>
+              <datalist id="keylist">
+                <option>%</option>
+                {listview(this.props.state.get("list"))}
+              </datalist>
+            </ReactBootstrap.Col>
+          </ReactBootstrap.FormGroup>
+          <ReactBootstrap.FormGroup>
+            <ReactBootstrap.Col xsOffset={2} xs={10}>
+              <ReactBootstrap.Button onClick={this.onSubmit.bind(this)}>Submit</ReactBootstrap.Button>
+            </ReactBootstrap.Col>
+          </ReactBootstrap.FormGroup>
+        </ReactBootstrap.Form>
+      );
+    }
+  });
+
+  const Tables = ReactRedux.connect(mapStateToProps)(class Tables extends React.Component {
+    render() {
+      const cols =(i)=>{
+        if(i != null)
+          return Object.values(i[0].columns).map((n)=>{return <th>{n}</th>});
+      }
+      const rows =(i)=>{
+        if(i != null)
+          return i[0].values.map((n)=>{
+            return(
+              <tr>
+                {n.map((m)=>{ return <td>{m}</td> })}
+              </tr>
+            );
+          });
+      }
+      return (
+        <ReactBootstrap.Table>
+          <thead>
+            <tr>
+              {cols(this.props.state.get("table"))}
+            </tr>
+          </thead>
+          <tbody>
+            {rows(this.props.state.get("table"))}
+          </tbody>
+        </ReactBootstrap.Table>
+      );
+    }
+  });
+
+  const App = ReactRedux.connect(mapStateToProps)( class App extends React.Component {
+    render() {
+      return (
+        <div>
+          <Controller />
+          <label>Result :</label>
+          <Tables />
+        </div>
+      );
+    }
+  });
+
+  /******** Provider, Render ********/
+
+  ReactDOM.render(
+    <ReactRedux.Provider store={store}>
+      <App />
+    </ReactRedux.Provider>,
+    document.getElementById('app')
+  );
+
+  </script>
+</body>
+</html>

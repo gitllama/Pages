@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xl="http://www.w3.org/1999/xlink" version="1.1" width="200" height="200">
+	<text x="0" y="20" font-size="9" stroke="black" stroke-width="1" font-family="arial, sans-serif">
+		A TG
+	</text>
+	<polyline points="
+		100 30 103 30
+		103 30 106 30
+		106 30 109 30
+		109 10 112 10
+		112 30 115 30
+		115 30 118 30
+		118 10 121 10
+		121 30 124 30
+		124 30 127 30
+	" stroke="black" fill="none"></polyline>
+	<text x="0" y="60" font-size="9" stroke="black" stroke-width="1" font-family="arial, sans-serif">
+		B TG
+	</text>
+	<polyline points="
+		100 70 103 70
+		103 70 106 70
+		106 50 109 50
+		109 70 112 70
+		112 70 115 70
+		115 50 118 50
+		118 50 121 50
+		121 50 124 50
+		124 70 127 70
+	" stroke="black" fill="none"></polyline>
+        <path d="M 127 4 Q 122 12 127 20 Q 132 28 127 36" fill="none" stroke="black"></path>
+        <path d="M 130 4 Q 125 12 130 20 Q 135 28 130 36" fill="none" stroke="black"></path>
+</svg>
+
