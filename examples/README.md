@@ -77,5 +77,6 @@ View customizes puluginを使用したReact+ReduxのRedmine埋め込み例。
 
 [11_ReactReduxWebpack](11_ReactReduxWebpack/dist/index.html)
 
-ローカルにWebpack入れようとしたら赤字出たので、グローバルに入れています。  
-Ver違いでwebpack.config.jsの記述違うし　つらい
+ローカルにWebpack入れようとしたら赤字出たので、グローバルに入れています。  
+Ver違いでwebpack.config.jsの記述違うし  
+つらい
