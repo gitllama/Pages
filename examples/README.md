@@ -70,3 +70,12 @@ View customizes puluginを使用したReact+ReduxのRedmine埋め込み例。
 [09_ReactReduxChart](09_ReactReduxChart.html)
 
 チャートの表示。plotlyを使用してます。pythonなどでも使えるのでいいかんじ。
+
+[10_ReactReduxTables](10_ReactReduxTables.html)
+
+### Node.js
+
+[11_ReactReduxWebpack](11_ReactReduxWebpack/dist/index.html)
+
+ローカルにWebpack入れようとしたら赤字出たので、グローバルに入れています。  
+Ver違いでwebpack.config.jsの記述違うし　つらい
