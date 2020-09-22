@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>ReactReduxRedmine</title>
+  <script type="text/javascript">
+  /*dummy*/
+  /*ここから*/
+  </script>
+
+  <script src="https://unpkg.com/react@15.6.1/dist/react.min.js"></script>
+  <script src="https://unpkg.com/react-dom@15.6.1/dist/react-dom.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/redux/3.7.2/redux.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-redux/5.0.6/react-redux.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.38/browser.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/immutable/3.8.1/immutable.min.js"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/3.4.2/js-yaml.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-bootstrap/0.31.2/react-bootstrap.min.js"></script>
+
+  <script type="text/babel">
+  //RedminにView customizes puluginでReactを埋め込む場合
+  // ここから～ここまで を記述すると
+  //dummyのscriptタグを含んだこのようなhead構成になる
+
+  let {
+    Button,FormGroup,FormControl,PageHeader, FieldGroup,
+    Grid, Row, Col, Jumbotron, Table,Panel, Label, Alert
+  } = window.ReactBootstrap;
+
+  const addrdebug = "http://192.168.1.xx";
+  const apikey = "xxxx";
+
+  /******** Action, Action Creators ********/
+
+  const usercheck =(i)=>({ type: 'USERCHECK', value: i });
+  const submit =(i)=>({ type: 'SUBMIT', value: i });
+  const onload =()=>({ type: 'ONLOAD'});
+
+  /******** Reducers, store ********/
+
+  //immutable.jsを使用して効率化
+  const defaultState = {
+    userid : "-1",
+    username : "null",
+    onload : false,
+    conditions : "",
+    result : ""
+  };
+  const initialState = Immutable.Map(defaultState);
+
+  //switch -> オブジェクトに変更
+  const reducers = {
+    'ONLOAD' : (state, action) => (
+      //immutable.jsでのobj変更
+      state.set('onload', true)
+    ),
+    'SUBMIT' : (state, action) => (
+      //immutable.jsでの複数パラメータのobj変更
+      //再編成を一度だけで済ます
+      state.withMutations(m => (
+        m.set('onload', false)
+        .set('conditions', action.value.conditions)
+    　　.set('result', action.value.result)
+      ))
+    ),
+    "USERCHECK" : (state, action) =>(
+      state.withMutations(m => (
+        m.set('onload', false)
+        .set('userid', action.value.userid)
+    　　.set('username', action.value.username)
+      ))
+    ),
+    "@@redux/INIT" : (state, action) =>(
+      //init時にaction.type = @@redux/INIT呼ばれる
+      state
+    )
+  };
+
+  function Reducer(state = initialState, action) {
+    if (reducers[action.type]) {
+        return reducers[action.type](state, action);
+    }
+    return state;
+  }
+  var store = Redux.createStore(Reducer);
+
+
+  /******** React Components ********/
+
+  //immutable.jsでのobjの取出し
+  //mapStateToPropsでstate: state.toJS()とすると生のJavaScriptオブジェクトへ
+  //変換できるが複製が発生するので効率的にはあまり意味がない
+  //取り出し先で.getや.getIn使用する方が良い
+
+  //Component内での値の取出しはimmutable.jsを使用しているため
+  //this.props.state.get('hoge')となる
+
+  const mapStateToProps =(state)=>({ state: state });
+
+
+  //input
+
+  class uInputComponent extends React.Component {
+    componentDidMount(){
+      let _url = `${addrdebug}/redmine/users/current.json?key=${apikey}`;
+      fetch(_url).then(response => response.json())
+      .then(json => {
+        this.props.dispatch(usercheck({
+          userid : json.user.id,
+          username : json.user.login
+        }));
+      });
+    }
+    onSubmit(){
+      //非同期処理のためComponentで処理してから結果のみdispatchに投げる
+
+      let _id = ReactDOM.findDOMNode(this.refs.ticket).value;
+      let conditions = "";
+      let result = "";
+
+      let _url = `${addrdebug}/redmine/issues/${_id}.json?format=json&include=relations,attachments`;
+
+      this.props.dispatch(onload());
+
+      fetch(_url).then(response => response.json())
+      .then(json => {
+        for(let i of json.issue.custom_fields){
+          switch(i.name){
+            case 'Conditions':
+              conditions = i.value;
+              break;
+            case 'Result':
+              result = i.value;
+              break;
+            default:
+              break;
+          }
+        }
+        this.props.dispatch(submit({
+          conditions : conditions,
+          result : result
+        }));
+      });
+    }
+    render() {
+      return (
+        <div>
+          <p>{this.props.state.get('userid') + " : " + this.props.state.get('username')}</p>
+          <table border="0">
+            <tr>
+              <td> <label>ticket No</label> </td>
+              <td> <input type="text" ref="ticket" defaultValue={"444"} /> </td>
+            </tr>
+          </table>
+          <button onClick={this.onSubmit.bind(this)}>submit</button>
+        </div>
+      );
+    }
+  }
+  var InputComponent = ReactRedux.connect(mapStateToProps)(uInputComponent);
+
+  //app
+
+
+  class uApp extends React.Component {
+    componentDidUpdate(prevProps, prevState){
+
+      let header = (()=>{/*
+        <head>
+          <meta charset="UTF-8">
+          <title>iframe</title>
+          <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/latest/css/bootstrap.min.css">
+        </head>
+      */}).toString().match(/\/\*([^]*)\*\//)[1];
+
+      ReactDOM.findDOMNode(this.refs.uframe).srcdoc
+       = header
+       + ReactDOM.findDOMNode(this.refs.main).innerHTML;
+       //<div dangerouslySetInnerHTML={{__html: this.props.state.html}}/>
+    }
+    render() {
+      const hoge =(flag)=>{
+        if(flag){
+          return(
+            <div>Now Loading...</div>
+          );
+        }else{
+          return(
+            <div>
+              <div>{this.props.state.get('conditions')}</div>
+              <div>{this.props.state.get('result')}</div>
+            </div>
+          );
+        }
+      }
+      return (
+        <div>
+          <div>
+            <InputComponent />
+          </div>
+          <div ref="main" style={{display:"none"}}>
+            {hoge(this.props.state.get('onload'))}
+          </div>
+          <hr/>
+          <h3>output</h3>
+          <div>
+            <iframe ref="uframe" width="100%" height="500" style={{border:"none"}}></iframe>
+          </div>
+          <hr/>
+        </div>
+      );
+    }
+  }
+  var App = ReactRedux.connect(mapStateToProps)(uApp);
+
+
+  /******** Provider, Render ********/
+
+  var Provider = ReactRedux.Provider;
+  ReactDOM.render(
+    <Provider store={store}>
+      <App />
+    </Provider>,
+    document.querySelector('#app')
+  );
+
+  /*ここまで*/
+
+  </script>
+</head>
+<body>
+  <div id="app"></div>
+</body>
+</html>

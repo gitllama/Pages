@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <script type="text/javascript">
+  /*dummy*/
+  /*From here ここから*/
+  </script>
+
+  <script src="https://unpkg.com/react@15.6.1/dist/react.min.js"></script>
+  <script src="https://unpkg.com/react-dom@15.6.1/dist/react-dom.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/redux/3.7.2/redux.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-redux/5.0.6/react-redux.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.38/browser.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/immutable/3.8.1/immutable.min.js"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-bootstrap/0.31.2/react-bootstrap.min.js"></script>
+
+  <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/3.4.2/js-yaml.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.5/require.min.js"></script>
+
+  <!-- javascriptだとグローバルになるがbabelだとスコープになる -->
+  <!-- babelでもwindowに代入すればグローバル -->
+  <script type="text/babel">
+
+  'use strict'
+
+  const {
+      Button,FormGroup,FormControl,
+      PageHeader, FieldGroup,
+      Grid, Row, Col, Jumbotron, Table,
+      Panel, Label, Alert
+    } = window.ReactBootstrap;
+  window.Provider = ReactRedux.Provider;
+
+  const initialState = Immutable.Map({
+    onload : false,
+    tracker : 0,
+    conditions : "",
+    result : "",
+    chartdata : null
+  });
+
+  window.mapStateToProps =(state)=>({ state : state });
+
+  window.reducers = null;
+  window.store = Redux.createStore((state = initialState, action)=>{
+    console.log(action.type, action.value)
+    if(reducers == null) return state;
+    return reducers[action.type]
+          ? reducers[action.type](state, action)
+          : state;
+  });
+
+  const changestate =(i)=>({ type: 'CHANGE', value: i });
+  const submit =(i)=>({ type: 'SUBMIT', value: i });
+  const onload =()=>({ type: 'ONLOAD'});
+  const catcherr =(i)=>({ type: 'ERR', value : i});
+
+  // newで使うコンポーネントとしては
+  //  - table form
+  //  - singnature
+  //  - ShadowDOMComponent(スタイル用)
+  // これらがreducersを通じてjQueryで接続
+  // それ以外は
+  //  - yaml
+  //  - 採番（親連動）
+
+  window.ShadowDOMComponent = class ShadowDOMComponent extends React.Component {
+    constructor(props) {
+      super(props);
+      this.style = '<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/2.8.0/github-markdown.min.css">';
+      this.root = null;
+    }
+    componentDidMount(){
+      const host = ReactDOM.findDOMNode(this.refs.shadowdom);
+      this.root = host.attachShadow({mode: 'closed'});
+      const newdom = ReactDOM.render(<div>{this.props.children}</div>, document.createElement('div')).innerHTML;
+      this.root.innerHTML = this.style + newdom;
+    }
+    componentDidUpdate(prevProps, prevState){
+      const newdom = ReactDOM.render(<div>{this.props.children}</div>, document.createElement('div')).innerHTML;
+      this.root.innerHTML = this.style + newdom;
+    }
+    render() {
+      return (
+        <div ref="shadowdom"/>
+      )
+    }
+  }
+
+  window.Signature = class Signature extends React.Component {
+    componentDidMount(){
+      if(this.props.src !== undefined){
+
+      }else{
+        requirejs(
+          ["https://cdnjs.cloudflare.com/ajax/libs/signature_pad/1.5.3/signature_pad.min.js"],
+          (util)=>{
+            this.signaturePad = new util(
+              ReactDOM.findDOMNode(this.refs.signature),
+              {
+                backgroundColor: 'rgba(255, 255, 255, 0)',
+                penColor: 'rgb(0, 0, 0)',
+                onEnd : ()=> this.onchange(this.signaturePad.toDataURL("image/svg+xml"))
+              }
+            )
+          }
+        )
+      }
+    }
+    onchange(e){
+      this.props.onChange(e);
+    }
+    onclick(){
+      this.signaturePad.clear();
+      this.onchange("");
+    }
+    //onContextMenu={this.contextMenu}
+    render() {
+      const w = this.props.width || 640;
+      const h = this.props.height || 80;
+      if(this.props.src !== undefined){
+        return (
+          <div>
+            <img width={w} height={h} src={this.props.src} alt="no signature"
+              style={{borderBottom:"1px solid black"}}/>
+            <div>
+              <span style={{display:"inline-block", width:w/2}}>(Signature)</span>
+              <span style={{display:"inline-block"}}>(Date)</span>
+            </div>
+          </div>
+        )
+      }else{
+        return (
+          <div>
+            <canvas ref="signature"
+              width={w} height={h}
+              style={{border:"1px dotted",borderBottom:"1px solid"}}/>
+            <div>
+              <span style={{display:"inline-block", width:w/2}}>(Signature)</span>
+              <span style={{display:"inline-block"}}>(Date)</span>
+            </div>
+            <button ref="clear" onClick={this.onclick.bind(this)}>Clear</button>
+          </div>
+        )
+      }
+    }
+  }
+
+
+  class FormComponent extends React.Component {
+    constructor(props) {
+      super(props);
+      this.onChangeState = this.onChangeState.bind(this);
+    }
+    propTypes: {
+      onChange: PropTypes.func.isRequired
+    }
+    onChangeState(){
+      let dst = {};
+      for(let i of Object.keys(this.props.src)){
+        dst[i] = ReactDOM.findDOMNode(this.refs[`form_${i}`]).value;
+      }
+      this.props.onChange(dst);
+    }
+    render() {
+      switch(this.props.type){
+        case "form":
+          return (
+            <table>
+            <tbody>
+              {Object.keys(this.props.src).map(i=>(
+                <tr>
+                  <td style={{textAlign:"right"}} >
+                    { i + " : " }
+                  </td>
+                  <td>
+                    <FormControl
+                      ref={`form_${i}`}
+                      type={this.props.src[i].type}
+                      placeholder={this.props.src[i].placeholder}
+                      onChange={this.onChangeState} />
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+            </table>
+          )
+        default:
+          return (
+            <Grid>
+              {Object.keys(this.props.header).map(i=>(
+                <Row>
+                  <Col sm={2}>
+                    {i + " : "}
+                  </Col>
+                  <Col sm={10}>
+                    {this.props.src[i]}
+                  </Col>
+                </Row>
+              ))}
+            </Grid>
+          )
+      }
+    }
+  }
+  window.FormComponent = FormComponent;
+
+
+  class YamlClass{
+    constructor() {
+    }
+
+    /*クラス定数*/
+    static get url(){ return "https://cdnjs.cloudflare.com/ajax/libs/js-yaml/3.4.2/js-yaml.min.js";}
+
+    /*load*/
+    static load(text){
+      // define([this.url],(e)=>{
+      //   console.log(e);
+      // });
+      // console.log(define);
+        // let jsyaml = require([this.url]);
+        // console.log(jsyaml);
+      //})
+      // let jsyaml = require([this.url]);
+      // //let a = jsyaml.load(text);
+      // console.log(jsyaml);
+      // return jsyaml;
+    }
+
+    /* Check */
+    static Check(src, reg){
+      let dst = "";
+      this.Enumeration(src, [], (key, value)=> {
+        let r = new RegExp(this.Parse(reg, key));
+        if(!(r.test(value))) dst += `[${key}]:${value},`;
+      });
+      return dst;
+    }
+
+    /* Enumeration */
+    static Enumeration(src, ary, callback){
+      for (var key in src) {
+        if (typeof src[key] === "object") {
+          this.Enumeration(src[key], ary.concat(key), callback);
+        }else{
+          callback(ary.concat(key), src[key]);
+        }
+      }
+    }
+    /*
+    static Enumeration(src1,src2){
+      JSON.parse(JSON.stringify(src1), (key, value)=>{
+        if(!is("Object", value))
+          console.log(key + ":" + value);
+        return value;
+      });
+    }
+    */
+
+    /* Parse / this.Parse(json,["a","b"]); */
+    static Parse(src, ary){
+      for(let key of ary){
+        src = src[key];
+        if(src == null) return null;
+      }
+      return src;
+      /*
+      let key = ary.shift();
+      if(key in val){
+        return ary.length < 1
+          ? val[key]
+          : this.Parse(val[key], ary);
+      }
+      return null;
+      */
+    }
+
+    /* is (type = String Number Boolean Date Error Array Function RegExp Object)*/
+    static is(type, obj) {
+      var clas = Object.prototype.toString.call(obj).slice(8, -1);
+      return obj !== undefined && obj !== null && clas === type;
+    }
+
+    /**/
+    static Read(text, callback){
+        callback(jsyaml.load(text));
+
+      //$.getScript(this.url_yaml, ()=>{
+      //}).fail(()=>{ alert('fail read yaml'); });
+    }
+
+    /**/
+    static ReadPath(path, callback){
+      $.get(path).done((src)=>{
+        let yaml = src.match(/```yaml([\s\S]*?)```/)[1];
+        this.Read(yaml, callback);
+      }).fail(()=>{ alert('fail read yaml'); });
+    }
+
+    static ReadPromise(text){
+      return new Promise((resolve, reject)=> {
+        $.getScript(this.url_yaml, ()=>{
+          resolve(jsyaml.load(text));
+        }).fail(()=>{ alert('fail read yaml'); });
+      });
+    }
+
+    static ReadPathPromise(path){
+      return new Promise((resolve, reject)=> {
+        console.log(path);
+        $.get(path).done((src)=>{
+          let yaml = src.match(/```yaml([\s\S]*?)```/)[1];
+          resolve(jsyaml.load(yaml));
+        }).fail(()=>{ alert('fail read yaml'); });
+      });
+    }
+  }
+
+
+
+  </script>
+
+  <script type="text/babel">
+
+  'use strict'
+
+  const formjson ={
+    "Name" : {
+      type : "text",
+      placeholder : "Model"
+    },
+    "Addr" : {
+      type : "text",
+      placeholder : "A/B/C"
+    }
+  }
+  const tablesjson ={
+    "Col_A" : {
+      type : "text",
+      placeholder : "Model"
+    },
+    "Col_B" : {
+      type : "text",
+      placeholder : "Num"
+    },
+    "Col_C" : {
+      type : "text",
+      placeholder : "Model"
+    },
+  }
+
+  /******** Reducers ********/
+
+  reducers = {
+    'ERR' : (state, action) => {
+      console.log(action.value.error);
+      return state.set('onload', false)
+    },
+    'ONLOAD' : (state, action) => (
+      state.set('onload', true)
+    ),
+    'CHANGE' : (state, action) => (
+      state.withMutations(m => (
+        m.set('onload', false)
+        .set('chartdata', action.value.chartdata)
+      ))
+    ),
+    'SUBMIT' : (state, action) => (
+      state.withMutations(m => (
+        m.set('onload', false)
+        .set('conditions', action.value.conditions)
+        .set('result', action.value.result)
+      ))
+    )
+  };
+
+  /******** React Components ********/
+
+  const App = ReactRedux.connect(mapStateToProps)(class uApp extends React.Component {
+    constructor(props) {
+      super(props);
+      this.state = {
+        radio : 'A',
+        sign : {"A": null,"B":null,"C":null}
+      }
+    }
+    setSignature(e){
+      let i = this.state.sign || {"A": null,"B":null,"C":null};
+      i[this.state.radio] = e;
+      this.setState({sign: i})
+    }
+    render() {
+      return (
+        <div>
+          <FormComponent type="form" src={formjson}/>
+          <div>
+            <input type="radio" name="sign" value="A" checked={this.state.radio === 'A'} onChange={() => this.setState({radio: 'A'})} />A
+            <input type="radio" name="sign" value="B" checked={this.state.radio === 'B'} onChange={() => this.setState({radio: 'B'})} />B
+            <input type="radio" name="sign" value="C" checked={this.state.radio === 'C'} onChange={() => this.setState({radio: 'C'})} />C
+          </div>
+          <Signature onChange={this.setSignature.bind(this)} />
+          <hr/>
+          <ShadowDOMComponent>
+            <Signature src={this.state.sign["A"] || ""}/>
+            <Signature src={this.state.sign["B"] || ""}/>
+            <Signature src={this.state.sign["C"] || ""}/>
+            <pre>
+              A:{this.props.state.get('onload').toString()}
+            </pre>
+          </ShadowDOMComponent>
+        </div>
+      );
+    }
+  });
+
+  /******** Render ********/
+
+  ReactDOM.render(
+    <Provider store={store}>
+      <App />
+    </Provider>,
+    document.querySelector('.splitcontentright')
+  );
+
+  /*to here ここまで*/
+
+  </script>
+</head>
+<body>
+  <div class="splitcontentright"></div>
+  <input id="test" type="text"></input>
+</body>
+</html>

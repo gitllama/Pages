@@ -1,0 +1,323 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+
+  <script type="text/javascript">
+  /*dummy*/
+  /*ここから*/
+  </script>
+
+  <script src="https://unpkg.com/react@15.6.1/dist/react.min.js"></script>
+  <script src="https://unpkg.com/react-dom@15.6.1/dist/react-dom.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/redux/3.7.2/redux.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-redux/5.0.6/react-redux.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.38/browser.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/immutable/3.8.1/immutable.min.js"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/3.4.2/js-yaml.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-bootstrap/0.31.2/react-bootstrap.min.js"></script>
+
+  <script type="text/babel">
+
+  // newで使うコンポーネントとしては
+  //  - table form
+  //  - singnature
+  //  - ShadowDOMComponent(スタイル用)
+  // これらがreducersを通じてjQueryで接続
+  // それ以外は
+  //  - yaml
+  //  - 採番（親連動）
+
+  window.addrdebug = "http://192.168.1.33"
+
+  /******** Action, Action Creators ********/
+
+  window.set =(key, val)=>({ type: 'SET', key : key, value : val});
+  window.setin =(keys, val)=>({ type: 'SETIN', key : keys, value : val});
+  window.del =(key)=>({ type: 'Delete',  key : key});
+  window.delin =(keys)=>({ type: 'DeleteIn',  key : keys});
+  window.merge =(val)=>({ type: 'MERGE', value : val});
+  window.mergein =(keys, val)=>({ type: 'MERGEIN', key : keys, value : val});
+  window.replace =(key, val)=>({ type: 'Replace',  key : key, value : val});
+
+  window.changeinput =(i)=>({ type: 'INPUT', value: i });
+  window.onload =()=>({ type: 'ONLOAD'});
+  window.setSign =(key, val)=>({ type: 'SETSIGN', value: val, key : key});
+  window.catcherr =(i)=>({ type: 'ERR', value : i});
+
+  /******** Reducers, store ********/
+
+  const initialState = Immutable.Map({
+  });
+
+  window.defaultReducers = {
+    ['SET'] : (state, action) => state.set(action.key, action.value),
+    ['SETIN'] : (state, action) => state.setIn(action.key, action.value),
+    ['Delete'] : (state, action) => state.delete(action.key),
+    ['DeleteIn'] : (state, action) => state.deleteIn(action.key),
+
+    ['MERGE'] : (state, action) => state.mergeDeep(action.value),
+    ['MERGEIN'] : (state, action) => state.mergeDeepIn(action.key, action.value),
+
+    ['Replace'] : (state, action) => state.withMutations(m =>
+        m.deleteIn(action.key).mergeDeepIn(action.key, action.value)
+    ),
+
+
+    ['SETConditions'] : (state, action) => {
+      if(action.id)
+      {
+        document.getElementById(action.id).value = (action.value instanceof Object)
+                                                 ? jsyaml.dump(action.value)
+                                                 : action.value;
+      }
+      return state.set('conditions', { ...state.get('conditions'), [action.key] : action.value});
+    },
+    ['SETSIGN'] : (state, action) => {
+      // if(action.id)
+      //   document.getElementById(action.id).value = action.value;
+      if(action.value != null){
+        return state.set('signature', { ...state.get('signature'), [action.key] : action.value});
+      }else{
+        let i = state.get('signature');
+        delete i[action.key];
+        return state.set('signature', { ...i });
+      }
+    },
+    ['ONLOAD'] : (state, action) => (
+      state.set('onload', true)
+    ),
+    'INPUT' : (state, action) => (
+      state.withMutations(m =>
+        m.set('data', action.value)
+      )
+    ),
+    "@@redux/INIT" : (state, action) =>(
+      state
+    )
+  };
+
+  window.reducers = defaultReducers;
+  window.store = Redux.createStore((state = initialState, action)=> {
+    console.log(action)
+    return reducers[action.type]
+      ? reducers[action.type](state, action)
+      : state;
+  });
+  window.mapStateToProps =(state)=>({ state: state });
+
+  /******** Components ********/
+
+/*ここまで*/
+/*ここから*/
+  </script>
+  <script type="text/babel">
+
+  'use strict'
+  console.log("View customizes 14");
+
+
+  /******** Action, reducer 追加 ********/
+
+  reducers = {
+    ...defaultReducers,
+  }
+
+  /******** jQuery前処理 ********/
+
+
+
+  /******** Component ********/
+
+  const TrayMap ={
+
+    Pocket : ReactRedux.connect(mapStateToProps)( class App extends React.Component {
+      constructor(props) {
+        super(props)
+        this.state = { linewidth: 1 };
+      }
+      mouseClick(){ this.props.dispatch(setin(['map','select'], this.props.no)); }
+      mouseOut() { this.setState({linewidth: 1}); }
+      mouseOver() { this.setState({linewidth: 2}); }
+      render() {
+        return (
+          <rect x={this.props.x} y={this.props.y} width={this.props.width} height={this.props.height}
+                stroke={ this.props.state.getIn(['map','select']) == this.props.no ? "#F00":"#000"}
+                fill={ this.props.state.getIn(['map','data',this.props.no+'',"BackgroundColor"]) || "#FFF"}
+                strokeWidth={this.state.linewidth}
+                onClick={()=>this.mouseClick()}
+                onMouseOut={() => this.mouseOut()}
+                onMouseOver={() => this.mouseOver()} />
+        )
+      }
+    }),
+
+    Result : ReactRedux.connect(mapStateToProps)( class App extends React.Component {
+      render() {
+        return (
+          <text x={this.props.x} y={this.props.y+16} textAnchor="start" fontSize="14"
+          >{this.props.state.getIn(['map','data',this.props.no+'',this.props.value+''])}</text>
+        )
+      }
+    }),
+    Note : ReactRedux.connect(mapStateToProps)( class App extends React.Component {
+      render() {
+        return (
+          <foreignObject x={this.props.x} y={this.props.y} width={this.props.width}>
+            <html xmlns="http://www.w3.org/xhtml/1999">
+              <div style={{fontSize:"8"}}>
+                {this.props.state.getIn(['map','data',this.props.no+'',"Note"])}
+              </div>
+            </html>
+          </foreignObject>
+        )
+      }
+    }),
+
+    Tray : ReactRedux.connect(mapStateToProps)( class App extends React.Component {
+      constructor(props) {
+        super(props)
+        this.size = this.props.size || 1
+        this.width = 275*this.size;
+        this.height = 226*this.size;
+        this.innerwidth = 250*this.size;
+        this.innerheight = 205*this.size;
+        this.innerX = 12.5*this.size;
+        this.innerY = 10.5*this.size;
+        this.pocketwidth = 38.7*this.size;
+        this.pocketheight = 44.2*this.size;
+
+        this.state = { linewidth: 3 };
+
+        let n = 1
+        this.map = []
+        for (var y = 0; y < 3; y++) {
+          for (var x = 0; x < 4; x++) {
+             this.map.push({
+               x : (30 + x * 57) * this.size,
+               y : (25 + y * 67) * this.size,
+               n : n
+             })
+             n++
+          }
+        }
+      }
+      mouseClick(){ this.props.dispatch(setin(['map','select'], 0)); }
+      mouseOut() { this.setState({linewidth: 3}); }
+      mouseOver() { this.setState({linewidth: 5}); }
+      render() {
+        const pockets = (i) => i.map(n=> <TrayMap.Pocket x={n.x} y={n.y} width={this.pocketwidth} height={this.pocketheight} no={n.n}/> )
+        const text = (i) => i.map(n=> <text x={n.x} y={n.y-2} textAnchor="start" fontSize="16">{n.n}</text> )
+        return (
+          <svg version="1.1" width={this.width} height={this.height} xmlns="http://www.w3.org/2000/svg">
+            <rect x="0" y="0" width={this.width} height={this.height}  stroke="#000" fill="#FFF"
+              strokeWidth={this.state.linewidth}
+              stroke={ this.props.state.getIn(['map','select']) == 0 ? "#F00":"#000"}
+              onClick={()=>this.mouseClick()}
+              onMouseOut={() => this.mouseOut()}
+              onMouseOver={() => this.mouseOver()} />
+            <rect x={this.innerX} y={this.innerY} width={this.innerwidth} height={this.innerheight}
+                  stroke="#000" fill="#FFF" strokeWidth="1"/>
+            {pockets(this.map)}
+            {text(this.map)}
+            {this.map.map(n=> <TrayMap.Result x={n.x} y={n.y} no={n.n}  value="No"/>)}
+            {this.map.map(n=> <TrayMap.Result x={n.x} y={n.y + 18} no={n.n} value="Result"/>)}
+            {this.map.map(n=> <TrayMap.Note x={n.x} y={n.y + 36} width={this.pocketwidth} no={n.n} />)}
+          </svg>
+        )
+      }
+    }),
+
+  }
+
+  const App = ReactRedux.connect(mapStateToProps)( class App extends React.Component {
+    constructor(props) {
+      super(props)
+
+      let buf = JSON.parse($(".cf_7.attribute > .value").text())
+
+      for (let i of Object.keys(buf)) {
+        buf[i]["BackgroundColor"] = /良品/.test(buf[i]["Result"]) ? "#F00" : "#FFF"
+      }
+
+      this.props.dispatch(mergein(['map','data'], buf));
+      this.props.dispatch(setin(['map','select'], 0));
+
+    }
+    componentDidMount() {
+    }
+    render() {
+      const json =(val)=> {
+        if(val != 0){
+          return JSON.stringify(this.props.state.getIn(['map','data', val + '']),undefined,1)
+        }else{
+          return JSON.stringify(this.props.state.getIn(['map','data']),undefined,1)
+        }
+      }
+      return (
+        <div>
+          <TrayMap.Tray size="2"/>
+            <pre>
+            {json(this.props.state.getIn(['map','select']))}
+            </pre>
+        </div>
+      )
+    }
+  });
+
+
+  /******** Provider, Render ********/
+
+  ReactDOM.render(
+    <ReactRedux.Provider store={store}>
+      <div>
+        <App />
+      </div>
+    </ReactRedux.Provider>,
+    document.getElementById('content')
+  );
+
+  </script>
+</head>
+<body>
+  <div id="content">
+  </div>
+  <div class="cf_7 attribute">
+    <div class="label"><span title="結果をYamlで表示します" class="field-description">Feedback</span>:</div>
+    <div class="value"><p>{
+  <br>  "1" : {
+  <br>    "No" : "04-09",
+  <br>    "Result" : "不良",
+  <br>    "Note" : "画素内異物、AV38電流異常"
+  <br>  },
+  <br>  "2" : {
+  <br>    "No" : "05-09",
+  <br>    "Result" : "未組立",
+  <br>    "Note" : "未組立"
+  <br>  },
+  <br>  "3" : {
+  <br>    "No" : "06-09",
+  <br>    "Result" : "不良",
+  <br>    "Note" : "画素欠陥"
+  <br>  },
+  <br>  "4" : {
+  <br>    "No" : "08-08",
+  <br>    "Result" : "不良",
+  <br>    "Note" : "縦傷"
+  <br>  },
+  <br>  "5" : {
+  <br>    "No" : "07-08",
+  <br>    "Result" : "良品(120p対応)",
+  <br>    "Note" : "良品、画素外キズ"
+  <br>  },
+  <br>  "6" : {
+  <br>    "No" : "06-08",
+  <br>    "Result" : "傷品(120p対応)",
+  <br>    "Note" : "MLごみ、LIDしみ"
+  <br>  }
+  <br>}</p></div></div>
+</body>
+</html>

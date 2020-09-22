@@ -1,0 +1,804 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+
+  <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+
+  <script type="text/javascript">
+  /*dummy*/
+  /*ここから*/
+  </script>
+
+  <script src="https://unpkg.com/react@15.6.1/dist/react.min.js"></script>
+  <script src="https://unpkg.com/react-dom@15.6.1/dist/react-dom.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/redux/3.7.2/redux.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-redux/5.0.6/react-redux.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-core/5.8.38/browser.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/immutable/3.8.1/immutable.min.js"></script>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/3.4.2/js-yaml.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/react-bootstrap/0.31.2/react-bootstrap.min.js"></script>
+
+  <script type="text/babel">
+
+  // newで使うコンポーネントとしては
+  //  - table form
+  //  - singnature
+  //  - ShadowDOMComponent(スタイル用)
+  // これらがreducersを通じてjQueryで接続
+  // それ以外は
+  //  - yaml
+  //  - 採番（親連動）
+
+  window.addrdebug = "http://192.168.1.33"
+
+  /******** Action, Action Creators ********/
+
+  window.set =(key, val)=>({ type: 'SET', key : key, value : val});
+  window.setin =(keys, val)=>({ type: 'SETIN', key : keys, value : val});
+  window.del =(key)=>({ type: 'Delete',  key : key});
+  window.delin =(keys)=>({ type: 'DeleteIn',  key : keys});
+  window.merge =(val)=>({ type: 'MERGE', value : val});
+  window.mergein =(keys, val)=>({ type: 'MERGEIN', key : keys, value : val});
+  window.replace =(key, val)=>({ type: 'Replace',  key : key, value : val});
+
+  window.changeinput =(i)=>({ type: 'INPUT', value: i });
+  window.onload =()=>({ type: 'ONLOAD'});
+  window.setSign =(key, val)=>({ type: 'SETSIGN', value: val, key : key});
+  window.catcherr =(i)=>({ type: 'ERR', value : i});
+
+  /******** Reducers, store ********/
+
+  const initialState = Immutable.Map({
+  });
+
+  window.defaultReducers = {
+    ['SET'] : (state, action) => state.set(action.key, action.value),
+    ['SETIN'] : (state, action) => state.setIn(action.key, action.value),
+    ['Delete'] : (state, action) => state.delete(action.key),
+    ['DeleteIn'] : (state, action) => state.deleteIn(action.key),
+
+    ['MERGE'] : (state, action) => state.mergeDeep(action.value),
+    ['MERGEIN'] : (state, action) => state.mergeDeepIn(action.key, action.value),
+
+    ['Replace'] : (state, action) => state.withMutations(m =>
+        m.deleteIn(action.key).mergeDeepIn(action.key, action.value)
+    ),
+
+
+    ['SETConditions'] : (state, action) => {
+      if(action.id)
+      {
+        document.getElementById(action.id).value = (action.value instanceof Object)
+                                                 ? jsyaml.dump(action.value)
+                                                 : action.value;
+      }
+      return state.set('conditions', { ...state.get('conditions'), [action.key] : action.value});
+    },
+    ['SETSIGN'] : (state, action) => {
+      // if(action.id)
+      //   document.getElementById(action.id).value = action.value;
+      if(action.value != null){
+        return state.set('signature', { ...state.get('signature'), [action.key] : action.value});
+      }else{
+        let i = state.get('signature');
+        delete i[action.key];
+        return state.set('signature', { ...i });
+      }
+    },
+    ['ONLOAD'] : (state, action) => (
+      state.set('onload', true)
+    ),
+    'INPUT' : (state, action) => (
+      state.withMutations(m =>
+        m.set('data', action.value)
+      )
+    ),
+    "@@redux/INIT" : (state, action) =>(
+      state
+    )
+  };
+
+  window.reducers = defaultReducers;
+  window.store = Redux.createStore((state = initialState, action)=> {
+    console.log(action)
+    return reducers[action.type]
+      ? reducers[action.type](state, action)
+      : state;
+  });
+  window.mapStateToProps =(state)=>({ state: state });
+
+  /******** Components ********/
+
+
+  /* ReactRedux Components */
+  window.Loading =(class Loading extends React.Component {
+    constructor(props) {
+      super(props);
+      this.state = { sec: 0}
+    }
+    componentDidMount() {
+      this.interval = setInterval(() => this.tick(), 1000);
+    }
+    tick() {
+      this.setState((prevState) => ({ sec: prevState.sec + 1}));
+    }
+    render() {
+      const loading =(i)=>{
+        switch(i % 3){
+          case 0: return ".";
+          case 1: return "..";
+          case 2: return "...";
+        }
+      }
+      return (
+        <p>{"NowLoading" + loading(this.state.sec)}</p>
+      )
+    }
+  });
+
+  window.ShadowDOMComponent =(class ShadowDOMComponent extends React.Component {
+    constructor(props) {
+      super(props);
+      this.style = '<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/latest/css/bootstrap.min.css">';
+      this.root = null;
+    }
+    componentDidMount(){
+      const host = ReactDOM.findDOMNode(this.refs.shadowdom);
+      this.root = host.attachShadow({mode: 'open'});
+      this.root.innerHTML = this.style + "<div>" + ReactDOM.findDOMNode(this.refs.shadowdom).innerHTML + "</div>";
+    }
+    componentDidUpdate(prevProps, prevState){
+      this.root.innerHTML = this.style + "<div>" + ReactDOM.findDOMNode(this.refs.shadowdom).innerHTML + "</div>";
+    }
+    render() { return (
+        <div ref="shadowdom">
+          {this.props.children}
+        </div>
+    )}
+  });
+
+  window.Signature = {
+
+    Input : ReactRedux.connect(mapStateToProps)(class Input extends React.Component {
+      componentDidMount(){
+        $.getScript("https://cdnjs.cloudflare.com/ajax/libs/signature_pad/1.5.3/signature_pad.min.js")
+        .done(()=>{
+          this.sign = new SignaturePad(
+            ReactDOM.findDOMNode(this.refs.signature),
+            {
+              backgroundColor: 'rgba(255, 255, 255, 0)',
+              penColor: 'rgb(0, 0, 0)',
+              onEnd : ()=> this.onchange(this.sign.toDataURL("image/svg+xml"))
+            }
+          )
+        })
+        .fail(()=>{ });
+      }
+      onchange(e){
+        this.props.dispatch(setSign(this.props.name || "default", e));
+      }
+      clear(e){
+        this.sign.clear();
+        this.props.dispatch(setSign(this.props.name || "default", null));
+      }
+      render() {
+        const w = this.props.width || 640;
+        const h = this.props.height || 80;
+        return (
+          <div>
+            <canvas ref="signature"
+              width={w} height={h}
+              style={{border:"1px dotted",borderBottom:"1px solid"}}/>
+            <div style={{width:w}}>
+              <span style={{display:"inline-block", width:w/2}}>(Signature)</span>
+              <span style={{display:"inline-block"}}>(Date)</span>
+            </div>
+            <button ref="clear" onClick={this.clear.bind(this)}>Clear</button>
+          </div>
+        )
+      }
+    }),
+
+    Output : ReactRedux.connect(mapStateToProps)(class Output extends React.Component {
+      render() {
+        const w = this.props.width || 640;
+        const h = this.props.height || 80;
+        return (
+          <div>
+            <img width={w} height={h} src={this.props.src} alt="no signature"
+              style={{borderBottom:"1px solid black"}}/>
+            <div style={{width:w}}>
+              <span style={{display:"inline-block", width:w/2}}>(Signature)</span>
+              <span style={{display:"inline-block"}}>(Date)</span>
+            </div>
+          </div>
+        )
+      }
+    }),
+
+  }
+
+  window.ChartView = ReactRedux.connect(mapStateToProps)(class Chart extends React.Component {
+    componentDidUpdate(prevProps, prevState){
+      let hoge = this.props.state.get(this.props.src);
+      if(hoge == null) return;
+      $.getScript("https://cdn.plot.ly/plotly-latest.min.js")
+      .done(()=>{
+        //Plotだと重ねてしまう
+        Plotly.newPlot(
+          ReactDOM.findDOMNode(this.refs.stage),
+          hoge,
+          {
+            title: 'the number of units sold transitions',//'販売個数推移',
+            xaxis: {
+              showgrid: true,
+              //tickformat: xTickFormat
+            },
+            yaxis: {
+              title: 'count',
+              showgrid: true,
+              //range: [0,100]
+            },
+          }
+        )
+      });
+    }
+    render() {
+      const hoge =(flag)=>{
+        if(flag){
+          return(
+            <div><Loading/></div>
+          );
+        }else{
+          return(
+            <div>
+            </div>
+          );
+        }
+      }
+      return (
+        <div>
+          {hoge(this.props.state.get('onload'))}
+          <div style={{width:"640px",height:"480px"}} ref="stage"></div >
+        </div>
+      );
+    }
+  });
+
+  window.Conditons = {
+
+    Head : ((props)=>
+          <table>
+            <tbody>
+              {props.children}
+            </tbody>
+          </table>
+    ),
+    Text : ReactRedux.connect(mapStateToProps)(class buf extends React.Component{
+      render() { return(
+        <tr>
+          <td>{this.props.label} : </td>
+          <td>
+            <input type="text"
+              value={this.props.state.get('conditions')[this.props.objkey]}
+              onChange={(val)=> this.props.dispatch(set(this.props.objkey, val.target.value, this.props.id))} />
+          </td>
+        </tr>
+      )}
+    }),
+    Select : ReactRedux.connect(mapStateToProps)(class buf extends React.Component{
+      render() { return(
+        <tr>
+          <td>{this.props.label} : </td>
+          <td>
+            <select
+              value={this.props.state.get('conditions')[this.props.objkey]}
+              onChange={(val)=> this.props.dispatch(set(this.props.objkey, val.target.value, this.props.id))} >
+              <option></option>
+              {this.props.keys.map((k)=><option>{k}</option>)}
+            </select>
+          </td>
+        </tr>
+      )}
+    }),
+    Date : ReactRedux.connect(mapStateToProps)(class buf extends React.Component{
+      render() { return(
+        <tr>
+          <td>{this.props.label} : </td>
+          <td>
+            <input type="date"
+              value={this.props.state.get('conditions')[this.props.objkey]}
+              onChange={(val)=> this.props.dispatch(set(this.props.objkey, val.target.value, this.props.id))} />
+          </td>
+        </tr>
+      )}
+    }),
+    Textarea : ReactRedux.connect(mapStateToProps)(class buf extends React.Component{
+      render() { return(
+        <tr>
+          <td>{this.props.label} : </td>
+          <td>
+            <textarea
+              value={this.props.state.get('conditions')[this.props.objkey]}
+              onChange={(val)=> this.props.dispatch(set(this.props.objkey, val.target.value, this.props.id))} />
+          </td>
+        </tr>
+      )}
+    }),
+    Num : ReactRedux.connect(mapStateToProps)(class buf extends React.Component{
+      render() { return(
+        <tr>
+          <td>{this.props.label} : </td>
+          <td>
+            <input type="number"
+              value={this.props.state.get('conditions')[this.props.objkey]}
+              onChange={(val)=> this.props.dispatch(set(this.props.objkey, val.target.value, this.props.id))} />
+          </td>
+        </tr>
+      )}
+    }),
+
+    Table : ReactRedux.connect(mapStateToProps)(class buf extends React.Component{
+      onchange(){
+        let dst = []
+        let i = ReactDOM.findDOMNode(this.refs.AQ)
+        for(var j of i.children){
+          let buf = {}
+          for(var k of j.children){
+            let l = k.children[0];
+            buf[l.className] = l.value;
+          }
+          dst.push(buf);
+        }
+
+        this.props.dispatch(set(this.props.objkey, dst, this.props.id));
+      }
+      render() { return(
+        <tr>
+          <td>{this.props.label} : </td>
+          <td>
+            <table style={{border:"1px solid"}}>
+              <thead>
+                <tr>{this.props.children.map(e=><th>{e.props.label}</th>)}</tr>
+              </thead>
+              <tbody ref="AQ" onChange={this.onchange.bind(this)}>
+                {
+                  Array.from(Array(this.props.rownum).keys()).map(index=> (
+                    <tr>{this.props.children.map(e=><td>{e}</td>)}</tr>
+                  ))
+                }
+              </tbody>
+            </table>
+          </td>
+        </tr>
+      )}
+    }),
+    TText : ReactRedux.connect(mapStateToProps)(class buf extends React.Component{
+      render() { return(
+        <input
+              type="text"
+              className={this.props.objkey} />
+      )}
+    }),
+    TSelect : ReactRedux.connect(mapStateToProps)(class buf extends React.Component{
+      render() { return(
+          <select className={this.props.objkey}>
+            <option></option>
+            {this.props.keys.map((k)=><option>{k}</option>)}
+          </select>
+      )}
+    }),
+    TNum : ReactRedux.connect(mapStateToProps)(class buf extends React.Component{
+      render() { return(
+        <input
+              type="number"
+              className={this.props.objkey} />
+      )}
+    }),
+  }
+
+  window.ConditonsView = {
+    Head : ((props)=>
+      <ReactBootstrap.Table  bordered>
+        <tbody>
+          {props.children}
+        </tbody>
+      </ReactBootstrap.Table>
+    ),
+    Text : ReactRedux.connect(mapStateToProps)(class buf extends React.Component{
+      render() { return(
+        <tr>
+          <td>{this.props.label} : </td>
+          <td>{this.props.state.get('conditions')[this.props.objkey]}</td>
+        </tr>
+      )}
+    }),
+
+    Table : ReactRedux.connect(mapStateToProps)(class buf extends React.Component{
+      render() {
+        const a =(i)=> ( i != null
+          ? Object.keys(i[0]).map(j=> <td>{j}</td>)
+          : <td>null</td> );
+        const b =(i)=> {return ( i != null
+            ? i.map(j=> <tr>{Object.keys(j).map(h=> <td>{j[h]}</td>)}</tr>)
+            : <td>null</td> )};
+        return(
+          <ReactBootstrap.Table striped bordered condensed hover>
+            <thead>
+              <tr>
+                {a(this.props.state.get('conditions')[this.props.objkey])}
+              </tr>
+            </thead>
+            <thead>
+              {b(this.props.state.get('conditions')[this.props.objkey])}
+            </thead>
+          </ReactBootstrap.Table>
+        )
+      }
+    }),
+  }
+
+/*ここまで*/
+/*ここから*/
+  </script>
+  <script type="text/babel">
+
+  'use strict'
+  console.log("View customizes 14");
+
+
+  /******** Action, reducer 追加 ********/
+
+  const setinwid =(keys, val)=>({ type: 'SETINWID', key : keys, value : val});
+  const key2id ={
+    ['description'] : "issue_description"
+  }
+
+  reducers = {
+    ...defaultReducers,
+    ['SETINWID'] : (state, action) => {
+      document.getElementById(key2id[action.key[1]]).value
+        = (action.value instanceof Object)
+        ? jsyaml.dump(action.value)
+        : action.value;
+      return state.setIn(action.key, action.value)
+    },
+    ['CHART'] : (state, action) => (
+      state.withMutations(m => (
+        m.set('onload', false)
+        .set('chartdata', action.value.chartdata)
+      ))
+    )
+  }
+
+  /******** jQuery前処理 ********/
+
+  //babelはDOM描画後に実行されるんだっけ？
+
+  $('#issue-form').before('<div id="app_Top"/>');
+  $('#issue-form').after('<div id="app_Bottom"/>');
+  $("input[name='commit']").hide();
+  $("input[name='continue']").hide();
+
+  $('#issue-form').submit(()=>{
+    console.log("submit");
+    //return false;
+  });
+
+  /******** Component ********/
+  const Switch = ReactRedux.connect(mapStateToProps)( class App extends React.Component {
+    constructor(props) {
+      super(props);
+      this.props.dispatch(setin(['switch','form'], false));
+      this.props.dispatch(setin(['switch','preview'], false));
+      this.props.dispatch(setin(['switch','default'], false));
+    }
+    onchange(e){
+      this.props.dispatch(setin(['switch',e], !this.props.state.getIn(['switch',e])));
+    }
+    onSwitch(){
+      let flag = this.props.state.getIn(['switch','default']);
+      if(flag){
+        $("#issue-form").hide();
+      }else{
+        $("#issue-form").show();
+      }
+      this.props.dispatch(setin(['switch','default'], !flag));
+    }
+    render() { return (
+      <div>
+        <p>
+          <input type="checkbox" name="view" onChange={()=>this.onchange('form')}/>React
+          <input type="checkbox" name="view" onChange={()=>this.onSwitch()}/>Default
+          <input type="checkbox" name="view" onChange={()=>this.onchange('preview')}/>ShadowDOMPreview
+        </p>
+        <button onClick={()=> $('#issue-form').submit()} >Submit</button >
+        <TwoWayBind/>
+      </div>
+    )}
+  });
+  //1;1対応まで
+
+  const Conditon ={
+    Text : ReactRedux.connect(mapStateToProps)( class App extends React.Component {
+      render() {
+        return (
+          <tr>
+            <td width="20%">{this.props.label}</td>
+            <td>
+              { (this.props.inputable)
+               ? <input type="text" value={description} onChange={(e)=> this.onchange('description',e.target.value)} />
+               : this.props.state.getIn(['issue','description','value'])
+              }
+            </td>
+          </tr>
+      )}
+    }),
+  }
+
+  const Input = ReactRedux.connect(mapStateToProps)( class App extends React.Component {
+    // なるべくissue.jsonと同じ構造を取る
+    //
+    //
+    //
+    constructor(props) {
+      super(props);
+    }
+    onchange(key,val){
+      this.props.dispatch(setinwid(['issue',key,'value'], val));
+    }
+    render() {
+      //const Detail = jsyaml.load(this.props.state.getIn(['issue','custom_fields',0,'value']));
+      //const tracker = this.props.state.getIn(['issue','tracker','name']);
+      //const priority = this.props.state.getIn(['issue','priority','name']);
+      //const status = this.props.state.getIn(['issue','status','name']);
+      const project = this.props.state.getIn(['issue','project']);
+      const description = this.props.state.getIn(['issue','description']);
+      return (
+      <div style={{display: this.props.state.getIn(['switch','form']) ? "block" : "none"}}>
+        <h2>Input Form</h2>
+        <ReactBootstrap.Table bordered>
+          <tr>
+            <td width="20%">description :</td>
+            <td>{this.props.state.getIn(['issue','description','value'])}</td>
+          </tr>
+          <Conditon.Text inputable="true">
+        </ReactBootstrap.Table>
+        <table>
+          <tbody>
+            <tr>
+              <td>Description :</td>
+              <td>
+                <input type="text" value={description} onChange={(e)=> this.onchange('description',e.target.value)} />
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    )}
+  });
+
+  const Preview = ReactRedux.connect(mapStateToProps)( class App extends React.Component {
+    render() {
+      return (
+        <div style={{display: this.props.state.getIn(['switch','preview']) ? "block" : "none"}}>
+          <ShadowDOMComponent>
+            <ReactBootstrap.PageHeader>
+              <h1>出荷依頼書  <small>sample</small></h1>
+            </ReactBootstrap.PageHeader>
+            <ReactBootstrap.Table bordered>
+              <tr>
+                <td width="20%">description :</td>
+                <td>{this.props.state.getIn(['issue','description','value'])}</td>
+              </tr>
+            </ReactBootstrap.Table>
+          </ShadowDOMComponent>
+          {JSON.stringify(this.props.state)}
+        </div>
+      )
+    }
+  });
+
+  const TwoWayBind = ReactRedux.connect(mapStateToProps)( class App extends React.Component {
+    //edit項目の登録解除
+    componentDidMount(){
+      const add =(key, id)=> {
+        document.getElementById(id).oninput = (val)=> this.props.dispatch(setin(['issue', key, 'value'], val.target.value))
+      }
+      add("subject", "issue_subject");
+      add("description", "issue_description"); //修正
+    }
+    componentWillUnmount(){
+
+    }
+    render() {
+      return (
+        <div/>
+      )
+    }
+  });
+
+
+  class Add extends React.Component {
+    constructor(props) {
+      super(props);
+
+      let _url = `http://192.168.1.33/redmine/issues/138.json?format=json&include=relations,attachments`;
+
+      fetch(_url).then(response => response.json())
+      .then(json => {
+        console.log(json) //.toJS()
+      })
+      .catch((err)=>{
+        console.log(err);
+      });
+    }
+    onclick(){
+      console.log("click");
+      let _url = `http://192.168.1.33/redmine/issues/138.json?key=xxxx`;
+      var a = {"issue":
+        {
+          "description": "B",
+          "custom_fields" : [
+            {"id":6, "value":"1.0.2"},
+            {"id":7, "value":"1.0.2"}
+          ]
+        }
+      }
+
+      $.ajax({
+          type: "PUT",
+          url: _url,
+          contentType: "application/json",
+          data: JSON.stringify(a)
+      });
+    }
+    render() { return (
+      <div>
+        <button onClick={()=>this.onclick()}>submit</button>
+      </div>
+    )}
+  };
+
+
+
+
+
+  // const Input = ReactRedux.connect(mapStateToProps)( class App extends React.Component {
+  //   constructor(props) {
+  //     super(props);
+  //     this.change = this.change.bind(this);
+  //   }
+  //   change(key,val){
+  //     this.props.dispatch(merge(['issue'].concat(key), val));
+  //   }
+  //   render() { return (
+  //     <div style={{display: this.props.state.get('flag_form') ? "block" : "none"}}>
+  //       <h2>Input Form</h2>
+  //       <input type="text" onChange={(e)=>this.change(["A"], e.target.value)}></input>
+  //       <Conditons.Head>
+  //         <Conditons.Text label="管理番号" objkey={"subject"} id={"issue_subject"}/>
+  //         <Conditons.Date label="登録日" objkey={"start_date"} id={"issue_start_date"}/>
+  //         <Conditons.Date label="希望納期" objkey={"due_date"} id={"issue_due_date"}/>
+  //         <Conditons.Select label="住所" keys={["A","B","C"]} objkey={"D"} id={"idD"}/>
+  //
+  //         <Conditons.Table label="詳細" rownum={2} objkey={"Detail"} id={"issue_custom_field_values_6"}>
+  //           <Conditons.TSelect label="Model" objkey={"Model"} keys={["A","B","C"]}/>
+  //           <Conditons.TText label="Specific" objkey={"Specific"}/>
+  //           <Conditons.TNum label="Quantity" objkey={"Quantity"} />
+  //           <Conditons.TNum label="UnitPrice" objkey={"UnitPrice"} />
+  //         </Conditons.Table>
+  //
+  //         <Conditons.Textarea label="Note" objkey={"description"} id={"issue_description"}/>
+  //       </Conditons.Head>
+  //
+  //       <Signature.Input />
+  //     </div>
+  //   )}
+  // });
+
+
+
+
+  /******** Provider, Render ********/
+
+  ReactDOM.render(
+    <ReactRedux.Provider store={store}>
+      <div>
+        <Switch />
+        <Input/>
+      </div>
+    </ReactRedux.Provider>,
+    document.getElementById('app_Top')
+  );
+
+  ReactDOM.render(
+    <ReactRedux.Provider store={store}>
+      <Preview />
+    </ReactRedux.Provider>,
+    document.getElementById('app_Bottom')
+  );
+
+  </script>
+  <link href="http://www.redmine.org/themes/redmine/stylesheets/application.css?1361112893" media="all" rel="stylesheet" type="text/css">
+</head>
+<body>
+  <div id="content">
+    <h2>新しいチケット</h2>
+    <form id="issue-form" class="new_issue" enctype="multipart/form-data" action="/redmine/projects/redmine/issues" accept-charset="UTF-8" method="post" style="display: none;">
+    <input name="utf8" type="hidden" value="✓"><input type="hidden" name="authenticity_token" value="GP5WHMPUOFIA9szDCWmPxZ7al1UcbK3qIqbUMN+7QH903EV8jYaj+iJTK0GozhfgB6+Wl3XoK6keYtXdNmWISQ==">
+    <div class="box tabular">
+      <div id="all_attributes"><input type="hidden" name="form_update_triggered_by" id="form_update_triggered_by" value="">
+        <p id="issue_is_private_wrap">
+          <input name="issue[is_private]" type="hidden" value="0"><input type="checkbox" value="1" name="issue[is_private]" id="issue_is_private"><label class="inline" for="issue_is_private" id="issue_is_private_label">プライベート</label>
+        </p>
+        <p><label for="issue_tracker_id">トラッカー<span class="required"> *</span></label><select onchange="updateIssueFrom('/redmine/projects/redmine/issues/new.js', this)" name="issue[tracker_id]" id="issue_tracker_id"><option value="16">Default</option>
+        <option value="7">Travel</option>
+        <option selected="selected" value="13">出荷依頼書</option></select></p>
+        <p><label for="issue_subject">題名<span class="required"> *</span></label><input size="80" maxlength="255" type="text" value="" name="issue[subject]" id="issue_subject"></p>
+        <p>
+          <label for="issue_description">説明</label>
+          <span id="issue_description_and_toolbar"><div class="jstElements">
+            <textarea cols="60" rows="10" accesskey="e" class="wiki-edit" name="issue[description]" id="issue_description"></textarea></div>
+          </span>
+        </p>
+        <div id="attributes" class="attributes">
+          <div class="splitcontent">
+            <div class="splitcontentleft">
+              <p><label for="issue_status_id">ステータス<span class="required"> *</span></label><select onchange="updateIssueFrom('/redmine/projects/redmine/issues/new.js', this)" name="issue[status_id]" id="issue_status_id"><option selected="selected" value="8">草案</option>
+                <option value="9">起案</option>
+                <option value="10">承認待</option>
+                <option value="13">終了</option>
+                <option value="14">破棄</option>
+                <option value="15">差戻</option></select>
+              </p>
+              <input type="hidden" name="was_default_status" value="8">
+              <p><label for="issue_priority_id">優先度<span class="required"> *</span></label><select name="issue[priority_id]" id="issue_priority_id"><option selected="selected" value="2">Normal</option>
+                <option value="4">Urgent</option></select>
+              </p>
+              <p><label for="issue_assigned_to_id">担当者</label><select name="issue[assigned_to_id]" id="issue_assigned_to_id"><option value="">&nbsp;</option>
+                <option value="5">&lt;&lt; 自分 &gt;&gt;</option><option value="5">kuroda a</option></select>
+              </p>
+            </div>
+            <div class="splitcontentright">
+              <p id="parent_issue"><label for="issue_parent_issue_id">親チケット</label><input size="10" type="text" name="issue[parent_issue_id]" id="issue_parent_issue_id" class="ui-autocomplete-input autocomplete" autocomplete="off"></p>
+              <p id="start_date_area">
+                <label for="issue_start_date">開始日</label><input size="10" value="2017-10-03" type="date" name="issue[start_date]" id="issue_start_date" class="date">
+              </p>
+              <p id="due_date_area">
+                <label for="issue_due_date">期日</label><input size="10" type="date" name="issue[due_date]" id="issue_due_date" class="date">
+              </p>
+            </div>
+          </div>
+          <div class="splitcontent">
+            <div class="splitcontentleft">
+              <p><label for="issue_custom_field_values_6"><span title="" class="field-description">Detail</span></label><textarea name="issue[custom_field_values][6]" id="issue_custom_field_values_6" class="text_cf" rows="3"></textarea></p>
+              <p><label for="issue_custom_field_values_7"><span title="" class="field-description">Feedback</span></label><textarea name="issue[custom_field_values][7]" id="issue_custom_field_values_7" class="text_cf" rows="3"></textarea></p>
+            </div>
+            <div class="splitcontentright">
+              <p><label for="issue_custom_field_values_10"><span title="送付先を入力します。" class="field-description">Addressee</span></label><textarea name="issue[custom_field_values][10]" id="issue_custom_field_values_10" class="text_cf" rows="3" style="margin-top: 0px; margin-bottom: 0px; height: 273px;"></textarea></p>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p id="attachments_form">
+        <label>ファイル</label><span id="attachments_fields"></span>
+        <span class="add_attachment">
+          <input type="file" name="attachments[dummy][file]" class="file_selector" multiple="multiple" onchange="addInputFiles(this);" data-max-file-size="5242880" data-max-file-size-message="このファイルはアップロードできません。添付ファイルサイズの上限(5 MB)を超えています。" data-max-concurrent-uploads="2" data-upload-path="/redmine/uploads.js" data-description-placeholder="説明 (任意)">(サイズの上限: 5 MB)</span>
+      </p>
+      <p id="watchers_form"><label>ウォッチャー</label>
+        <span id="watchers_inputs">
+        </span>
+        <span class="search_for_watchers">
+          <a data-remote="true" data-method="get" href="/redmine/watchers/new?project_id=redmine">ウォッチャーを検索して追加</a>
+        </span>
+      </p>
+    </div>
+    <input type="submit" name="commit" value="作成" style="display: none;">
+    <input type="submit" name="continue" value="連続作成" style="display: none;">
+    </form>
+  </div>
+</body>
+</html>

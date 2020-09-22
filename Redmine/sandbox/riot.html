@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="ja">
+  <head>
+    <title>Riot Demo</title>
+  </head>
+  <body>
+    <!-- ここに、TODOリストのコンポーネントができてほしい -->
+    <todo></todo>
+
+    <!-- 「todoタグ」の定義 (外部ファイルに書いて、srcで読み込んでもよい) -->
+    <script type="riot/tag">
+      <todo>
+        <ul>
+          <li each="{ list }">{ name }</li>
+        </ul>
+
+        <style>
+         todo li {
+           margin: 0.5em;
+           padding: 0.5em;
+           background-color: #eee;
+         }
+        </style>
+
+        this.list = opts.list;
+      </todo>
+    </script>
+
+    <!-- riot.js本体 -->
+    <script src="https://cdn.jsdelivr.net/g/riot@2.0(riot.min.js+compiler.min.js)"></script>
+
+    <!-- mount!! -->
+    <!-- (<todo>を書いていた部分に、定義したtodoタグの振る舞いを実際に与える その際データを渡したりする) -->
+    <script>
+      riot.mount('todo', {
+        list: [{
+            name: "やばい"
+        },{
+            name: "まじで"
+        },{
+            name: "はんぱない"
+        }]
+      });
+    </script>
+  </body>
+</html>
