@@ -266,6 +266,7 @@ function RefTimer(){
 const App = () => (
   <ErrorBoundary>
     <Provider>
+      <Title/>
       <Counter/>
     </Provider>
   </ErrorBoundary>
