@@ -51,8 +51,8 @@ define([
               audio: false,             
               video: {
                 facingMode: "environment", 
-                width : width,
-                height : height
+                width : height,
+                height : width
               },
             });
             //const currentTrack = getCurrentTrack(stream);
