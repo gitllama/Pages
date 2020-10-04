@@ -36,8 +36,8 @@ define([
     const [result, setResult] = React.useState(undefined);
     const refVideo = React.useRef();
     const refSnap = React.useRef();
-    const refResult = React.useRef();
     React.useEffect(() =>{
+      let unmounted = false;
       let width = refSnap.current.width;
       let height = refSnap.current.height;
       let canvas = refSnap.current.getContext("2d");
@@ -53,7 +53,7 @@ define([
             let dst =jsQR(imageData.data, imageData.width, imageData.height);
             if (dst){
               //refResult.current.innerText = result.data;
-              setResult(dst);
+              if (!unmounted) setResult(dst);
               break;
             }
             await asyncWait(500); // 500ms待機する
@@ -62,12 +62,13 @@ define([
           //console.log(JSON.stringify(err));
           console.log(e);
         }
+        return (()=>{ unmounted = true; });
       })();
     } , []);
     
     return (
       <div>
-        <div id="result">Result：{result}</div>
+        <div id="result">{`Result：${result}`}</div>
         <video id="player" ref={refVideo} autoPlay></video>
         <canvas id="snapshot" ref={refSnap} width="480" height="640"></canvas>
       </div>
