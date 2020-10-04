@@ -36,12 +36,14 @@ define([
     const [result, setResult] = React.useState(undefined);
     const refVideo = React.useRef();
     const refSnap = React.useRef();
+    //const refSnap = React.useRef();
     React.useEffect(() =>{
       let unmounted = false;
       let width = refSnap.current.width;
       let height = refSnap.current.height;
       let canvas = refSnap.current.getContext("2d");
       (async ()=>{
+        if (!unmounted){
         try{
           // カメラストリームをプレイヤーのデータに設定
           refVideo.current.srcObject = await asyncGetStream(width, height);
@@ -53,7 +55,7 @@ define([
             let dst =jsQR(imageData.data, imageData.width, imageData.height);
             if (dst){
               //refResult.current.innerText = result.data;
-              if (!unmounted) setResult(dst);
+               setResult(dst);
               break;
             }
             await asyncWait(500); // 500ms待機する
@@ -62,9 +64,10 @@ define([
           //console.log(JSON.stringify(err));
           console.log(e);
         }
+        }
         return (()=>{ unmounted = true; });
       })();
-    } , []);
+    }, []);
     
     return (
       <div>
