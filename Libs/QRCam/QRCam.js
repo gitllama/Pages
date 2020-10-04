@@ -20,6 +20,23 @@ define([
     });
   }
 
+  const asyncRequirejsQR = ()=>{
+    return new Promise((resolve, reject) => {
+      requirejs(
+        ['https://cdn.jsdelivr.net/npm/jsqr@1.3.1/dist/jsQR.min.js']
+        , (dst)=> resolve(dst) 
+      );
+    });
+  }
+
+  const getCurrentTrack = (stream)=>{
+    stream.getVideoTracks().forEach(track=>{
+      if(track.readyState = "live"){
+        return track;
+      }
+    });
+  }
+
   const QRCam = ()=>{
     const [result, setResult] = React.useState(undefined);
     const refVideo = React.useRef();
@@ -27,8 +44,8 @@ define([
     const refResult = React.useRef();
     React.useEffect(() =>{
       let unmounted = false;
-      let width = refSnap.current.width;
-      let height = refSnap.current.height;
+      //let width = refSnap.current.width;
+      //let height = refSnap.current.height;
       let canvas = refSnap.current.getContext("2d");
       let stream = undefined;
       (async ()=>{
@@ -38,12 +55,14 @@ define([
             stream = await navigator.mediaDevices.getUserMedia({
               video: {
                 facingMode: "environment", 
-                width: width, 
-                height: height
-              }, 
+              },
               audio: false
             });
+            const {width, height} = getCurrentTrack(stream).getSettings();
             refVideo.current.srcObject = stream;
+            refSnap.current.width = width;
+            refSnap.current.height = height;
+
             // setIntervalの代用
             while ( true ){ 
               canvas.drawImage(refVideo.current, 0, 0, width, height);
@@ -53,8 +72,6 @@ define([
               if (dst){
                 //refResult.current.innerText = result.data;
                 setResult(dst.data);
-                
-
                 break;
               }
               await asyncWait(500); // 500ms待機する
@@ -79,7 +96,7 @@ define([
       <div>
         <div id="result" ref={refResult}>{`Result：${result}`}</div>
         <video id="player" ref={refVideo} autoPlay></video>
-        <canvas id="snapshot" ref={refSnap} width="480" height="640"></canvas>
+        <canvas id="snapshot" ref={refSnap}></canvas>
       </div>
     )
   }
