@@ -208,13 +208,22 @@ const Counter = () => {
   // useEffect : mount, render時動作
   // 第二引数での参照変数変更時に動作, 空配列[]で初回のみ動作, 省略で毎回動作
   React.useEffect(() => {
+    let unmounted = false;
     if(isFirstRender.current) {
       console.log('1st mounting...');
       isFirstRender.current = false;
     } else {
       console.log(`${count}rd rerendering`);
+      (async () => { 
+        //await new Promise(r => setTimeout(r, 1000));
+        if (!unmounted) {
+          // 削除された後にコールバックされても良いようにステート変更はフラグにくるむ
+          setCount(c => c + 1);
+        }
+      });
       dispatch({ type: ActionType.TITLE, value : `count-${count}` });
     }
+    return (() => { unmounted = true;}); //cleanup関数でPromiseを返さないようにasyncにはくるまない
   }, [count]);
   // useCallback : 使用せず<button onClick={() => dispatch({ type : hoge })}/>と直接記述でもOK
   // count参照しないと値の変更がない

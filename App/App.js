@@ -27,6 +27,7 @@ define(
   const regionManeger = {
     ["Home"] : (<div>under construction</div>),
     ["Mermaid"] : (<Mermaid/>),
+    ["QRCam"] : (<QRCam/>),
   };
   
   const App = () => (
@@ -35,7 +36,7 @@ define(
       <AppBar title="Test" regions={regionManeger}>
         <Loading/>
         <Box mt={10} width="auto" minHeight={480} bgcolor="grey.300">
-          <Selector defultRegion='A'>
+          <Selector defultRegion='Home'>
             {regionManeger}
           </Selector>
         </Box>

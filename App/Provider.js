@@ -24,6 +24,15 @@ define(
 
   const Provider = ({children}) => {
     const [state, dispatch] = React.useReducer(reducer, initialState);
+    React.useEffect(() => {
+      console.log('Provider mounting...');
+      dispatch({ type: ActionType.LOADED});
+      return () => console.log('Provider unmounting...');
+    }, []);
+    return <Store.Provider value={{state, dispatch}}>{children}</Store.Provider>;
+  }
+  const Provider2 = ({children}) => {
+    const [state, dispatch] = React.useReducer(reducer, initialState);
     const [open, setOpen] = React.useState(false);
     const isFirstRender = React.useRef(true);
     React.useEffect(() => {
@@ -40,7 +49,6 @@ define(
     }, [open]);
     return <Store.Provider value={{state, dispatch}}>{children}</Store.Provider>;
   }
-  
   return Provider;
 
 });

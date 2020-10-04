@@ -61,22 +61,32 @@ define([
     const errevent = React.useCallback((e) => 
       dispatch({ type: ActionType.ERR, value : "aaa" }) 
     , []);
-    React.useEffect(async () => {
+    // コンポーネントが削除された後にコールバックが呼ばれることがあるので
+    // unmountedフラグいるよ
+    React.useEffect(() => {
+      dispatch({ type: ActionType.LOADING});
+      let unmounted = false;
       ref.current.innerHTML = "";
-      let mermaid = await asyncCallA();
-      mermaid.initialize({
-        startOnLoad:false,
-        securityLevel: 'loose',
-        theme: 'forest',
-        flowchart:{
-          useMaxWidth:false,
-          htmlLabels:true
+      (async () => {    
+        let mermaid = await asyncCallA();
+        mermaid.initialize({
+          startOnLoad:false,
+          securityLevel: 'loose',
+          theme: 'forest',
+          flowchart:{
+            useMaxWidth:false,
+            htmlLabels:true
+          }
+        });
+        if (!unmounted) {
+          mermaid.mermaidAPI.render('mermaid_id', AsciiGraph("A"), (svg,bindEvents)=>{
+            ref.current.innerHTML = svg;
+            bindEvents();
+          });
+          dispatch({ type: ActionType.LOADED});
         }
-      });
-      mermaid.mermaidAPI.render('mermaid_id', AsciiGraph("A"), (svg,bindEvents)=>{
-        ref.current.innerHTML = svg;
-        bindEvents();
-      });
+      })();
+      return (()=>{ unmounted = true; });
     }, []);
     return (  
       <div>
