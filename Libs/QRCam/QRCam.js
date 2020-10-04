@@ -47,14 +47,14 @@ define([
           try{
             // カメラストリームをプレイヤーのデータに設定
             stream = await navigator.mediaDevices.getUserMedia({
+              audio: false,             
               video: {
                 facingMode: "environment", 
                 width : width,
                 height : height
               },
-              audio: false
             });
-            const currentTrack = getCurrentTrack(stream);
+            //const currentTrack = getCurrentTrack(stream);
             refVideo.current.srcObject = stream;
 
             // setIntervalの代用
