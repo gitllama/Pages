@@ -19,19 +19,18 @@ define(
     {A, B, C}
   )=>{
 
-
-  //getParams('region', 'A'),
+  const regionManeger = {
+    ["A"] : (<A/>),
+    ["B"] : (<B/>),
+    ["C"] : (<C/>),
+    ["D"] : (<div>under construction</div>),
+  };
   
   const App = () => (
     <Provider>
       <Loading>
         <Selector defultRegion='A'>
-          {{
-            ["A"] : (<A/>),
-            ["B"] : (<B/>),
-            ["C"] : (<C/>),
-            ["D"] : (<div>under construction</div>),
-          }}
+          {regionManeger}
         </Selector>
       </Loading>
     </Provider>

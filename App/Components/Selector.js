@@ -1,6 +1,6 @@
 'use strict';
 
-define(['react', 'App/actions', 'App/store', 'material-ui'],  
+define(['react', 'jsx!App/actions', 'App/store', 'material-ui'],  
 (
   React,
   ActionType,
