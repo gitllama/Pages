@@ -11,15 +11,6 @@ define([
 
   const asyncWait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
-  const asyncGetStream = (width, height)=>{
-    return new Promise((resolve, reject) => {
-      //カメラ使用許可
-      .then((dst)=>{
-        resolve(dst);
-      });
-    });
-  }
-
   const asyncRequirejsQR = ()=>{
     return new Promise((resolve, reject) => {
       requirejs(
