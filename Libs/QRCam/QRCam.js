@@ -20,14 +20,7 @@ define([
     });
   }
 
-  const asyncRequirejsQR = ()=>{
-    return new Promise((resolve, reject) => {
-      requirejs(
-        ['https://cdn.jsdelivr.net/npm/jsqr@1.3.1/dist/jsQR.min.js']
-        , (dst)=> resolve(dst) 
-      );
-    });
-  }
+
 
   const getCurrentTrack = (stream)=>{
     stream.getVideoTracks().forEach(track=>{
