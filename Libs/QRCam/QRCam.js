@@ -9,19 +9,13 @@ define([
   Store
 )=>{
 
-  const startScan = (refSnap, refVideo, width, height, callback)=> {
-    const canvasContext = refSnap.current.getContext("2d");
-    // 500ms間隔でスナップショットを取得し、QRコードの読み取りを行う
-    let intervalHandler = setInterval(() => {
-      canvasContext.drawImage(refVideo.current, 0, 0, width, height);
-      const imageData = canvasContext.getImageData(0, 0, width, height);
-      //const scanResult = jsQR(imageData.data, imageData.width, imageData.height);
-      //if (scanResult) {
-      //  clearInterval(intervalHandler);
-      //  if (callback) {
-      //    callback(scanResult);
-      //  }
-      //}
+  function  sleep(ms){
+    return new Promise( function(resolve) {
+      setTimeout(resolve, ms);
+    });
+  }
+
+  /*
       requirejs(
         ['https://cdn.jsdelivr.net/npm/jsqr@1.3.1/dist/jsQR.min.js']
         , (jsQR)=>{
@@ -34,40 +28,62 @@ define([
           }
         }
       );
-    }, 500);
-  }
+*/
 
+  const asyncRequirejsQR = ()=>{
+    return new Promise((resolve, reject) => {
+      requirejs(
+        ['https://cdn.jsdelivr.net/npm/jsqr@1.3.1/dist/jsQR.min.js']
+        , (dst)=> resolve(dst) 
+      );
+    });
+  };
+
+  const asyncGetStream = (width, height)=>{
+    return new Promise((resolve, reject) => {
+      navigator.mediaDevices.getUserMedia({
+        video: {facingMode: "environment", width: width, height: height}, audio: false
+      }).then((dst)=>{
+        resolve(dst);
+      });
+    });
+  }
 
   const QRCam = ()=>{
     const refVideo = React.useRef();
     const refSnap = React.useRef();
     const refResult = React.useRef();
     React.useEffect(() =>{
-      let width = refSnap.current.width;
-      let height = refSnap.current.height;
-      
-      let handleSuccess = (stream)=> {
-        player.srcObject = stream; // カメラストリームをプレイヤーのデータに設定
-        startScan(refSnap, refVideo, width, height, (scanResult) => {
-          refResult.current.innerText = scanResult.data;
-        });
-      };
-
-      //4.
-      navigator.mediaDevices.getUserMedia({
-        video: {facingMode: "environment", width: width, height: height}, audio: false
-      }).then(handleSuccess)
-      .catch(err => {
-        console.log(JSON.stringify(err));
-      });
-
-    } , [refVideo, refSnap, refResult]);
+      (async ()=>{
+        try{
+          let width = refSnap.current.width;
+          let height = refSnap.current.height;
+          let stream = await asyncGetStream(width, height);
+          player.srcObject = stream;// カメラストリームをプレイヤーのデータに設定
+          let canvasContext = refSnap.current.getContext("2d");
+          while ( true ){ //setIntervalの代用
+            canvasContext.drawImage(refVideo.current, 0, 0, width, height);
+            let imageData = canvasContext.getImageData(0, 0, width, height);
+            let jsQR = await asyncRequirejsQR();
+            let result =jsQR(imageData.data, imageData.width, imageData.height);
+            if (result){
+              refResult.current.innerText = result.data;
+              break;
+            }
+            await sleep(500); // 500ms待機する
+          }
+        }catch(e){
+          //console.log(JSON.stringify(err));
+          console.log(e);
+        }
+      })();
+    } , []);
     
     return (
       <div>
         <div id="result" ref={refResult}>null</div>
         <video id="player" ref={refVideo} autoPlay></video>
-        <canvas id="snapshot" ref={refSnap} width="480" height="640"></canvas>
+        <canvas id="snapshot" ref={refSnap} width="640" height="480"></canvas>
       </div>
     )
   }
