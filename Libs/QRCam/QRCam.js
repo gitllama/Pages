@@ -33,41 +33,46 @@ define([
       let stream = undefined;
       (async ()=>{
         if (!unmounted){
-        try{
-          // カメラストリームをプレイヤーのデータに設定
-          stream = await navigator.mediaDevices.getUserMedia({
-            video: {
-              facingMode: "environment", 
-              width: width, 
-              height: height
-            }, 
-            audio: false
-          });
-          refVideo.current.srcObject = stream;
-          // setIntervalの代用
-          while ( true ){ 
-            canvas.drawImage(refVideo.current, 0, 0, width, height);
-            let imageData = canvas.getImageData(0, 0, width, height);
-            let jsQR = await asyncRequirejsQR();
-            let dst =jsQR(imageData.data, imageData.width, imageData.height);
-            if (dst){
-              //refResult.current.innerText = result.data;
-              stream.getVideoTracks.forEach(track=>track.stop());
-              setResult(dst.data);
-              break;
+          try{
+            // カメラストリームをプレイヤーのデータに設定
+            stream = await navigator.mediaDevices.getUserMedia({
+              video: {
+                facingMode: "environment", 
+                width: width, 
+                height: height
+              }, 
+              audio: false
+            });
+            refVideo.current.srcObject = stream;
+            // setIntervalの代用
+            while ( true ){ 
+              canvas.drawImage(refVideo.current, 0, 0, width, height);
+              let imageData = canvas.getImageData(0, 0, width, height);
+              let jsQR = await asyncRequirejsQR();
+              let dst =jsQR(imageData.data, imageData.width, imageData.height);
+              if (dst){
+                //refResult.current.innerText = result.data;
+                setResult(dst.data);
+                
+
+                break;
+              }
+              await asyncWait(500); // 500ms待機する
             }
-            await asyncWait(500); // 500ms待機する
+          }catch(e){
+            //console.log(JSON.stringify(err));
+            console.log(e);
+          }finally{
+            if(stream) stream.getVideoTracks.forEach(track=>track.stop());
+            stream = undefined;
           }
-        }catch(e){
-          //console.log(JSON.stringify(err));
-          console.log(e);
         }
-        }
-        return (()=>{ 
-          unmounted = true; 
-          if(stream) stream.getVideoTracks.forEach(track=>track.stop());
-        });
       })();
+      return (()=>{ 
+        unmounted = true; 
+        if(stream) stream.getVideoTracks.forEach(track=>track.stop());
+        stream = undefined;
+      });
     }, []);
     
     return (
