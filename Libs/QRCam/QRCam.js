@@ -9,26 +9,7 @@ define([
   Store
 )=>{
 
-  function  sleep(ms){
-    return new Promise( function(resolve) {
-      setTimeout(resolve, ms);
-    });
-  }
-
-  /*
-      requirejs(
-        ['https://cdn.jsdelivr.net/npm/jsqr@1.3.1/dist/jsQR.min.js']
-        , (jsQR)=>{
-          const scanResult = jsQR(imageData.data, imageData.width, imageData.height);
-          if (scanResult) {
-            clearInterval(intervalHandler);
-            if (callback) {
-              callback(scanResult);
-            }
-          }
-        }
-      );
-*/
+  const asyncWait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
   const asyncRequirejsQR = ()=>{
     return new Promise((resolve, reject) => {
@@ -70,7 +51,7 @@ define([
               refResult.current.innerText = result.data;
               break;
             }
-            await sleep(500); // 500ms待機する
+            await asyncWait(500); // 500ms待機する
           }
         }catch(e){
           //console.log(JSON.stringify(err));
@@ -83,7 +64,7 @@ define([
       <div>
         <div id="result" ref={refResult}>null</div>
         <video id="player" ref={refVideo} autoPlay></video>
-        <canvas id="snapshot" ref={refSnap} width="640" height="480"></canvas>
+        <canvas id="snapshot" ref={refSnap} width="480" height="640"></canvas>
       </div>
     )
   }
