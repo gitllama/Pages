@@ -20,12 +20,11 @@ define([
     });
   }
 
-
-
   const getCurrentTrack = (stream)=>{
     stream.getVideoTracks().forEach(track=>{
       if(track.readyState = "live"){
-        return track;
+        const dst = track.getSettings();
+        return {width : dst.width, height: dst.height};
       }
     });
   }
@@ -51,7 +50,7 @@ define([
               },
               audio: false
             });
-            const {width, height} = getCurrentTrack(stream).getSettings();
+            const {width, height} = getCurrentTrack(stream);
             refVideo.current.srcObject = stream;
             refSnap.current.width = width;
             refSnap.current.height = height;
