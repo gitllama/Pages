@@ -14,10 +14,7 @@ define([
   const asyncGetStream = (width, height)=>{
     return new Promise((resolve, reject) => {
       //カメラ使用許可
-      navigator.mediaDevices.getUserMedia({
-        video: {facingMode: "environment", width: width, height: height}, 
-        audio: false
-      }).then((dst)=>{
+      .then((dst)=>{
         resolve(dst);
       });
     });
@@ -42,11 +39,20 @@ define([
       let width = refSnap.current.width;
       let height = refSnap.current.height;
       let canvas = refSnap.current.getContext("2d");
+      let stream = undefined;
       (async ()=>{
         if (!unmounted){
         try{
           // カメラストリームをプレイヤーのデータに設定
-          refVideo.current.srcObject = await asyncGetStream(width, height);
+          stream = await navigator.mediaDevices.getUserMedia({
+            video: {
+              facingMode: "environment", 
+              width: width, 
+              height: height
+            }, 
+            audio: false
+          });
+          refVideo.current.srcObject = stream;
           // setIntervalの代用
           while ( true ){ 
             canvas.drawImage(refVideo.current, 0, 0, width, height);
@@ -55,6 +61,7 @@ define([
             let dst =jsQR(imageData.data, imageData.width, imageData.height);
             if (dst){
               //refResult.current.innerText = result.data;
+              stream.getVideoTracks.forEach(track=>track.stop());
               setResult(dst.data);
               break;
             }
@@ -65,7 +72,10 @@ define([
           console.log(e);
         }
         }
-        return (()=>{ unmounted = true; });
+        return (()=>{ 
+          unmounted = true; 
+          if(stream) stream.getVideoTracks.forEach(track=>track.stop());
+        });
       })();
     }, []);
     
