@@ -13,6 +13,7 @@ define([
 
   const asyncGetStream = (width, height)=>{
     return new Promise((resolve, reject) => {
+      //カメラ使用許可
       navigator.mediaDevices.getUserMedia({
         video: {facingMode: "environment", width: width, height: height}, 
         audio: false
@@ -32,6 +33,7 @@ define([
   }
 
   const QRCam = ()=>{
+    const [result, setResult] = React.useState(undefined);
     const refVideo = React.useRef();
     const refSnap = React.useRef();
     const refResult = React.useRef();
@@ -48,9 +50,10 @@ define([
             canvas.drawImage(refVideo.current, 0, 0, width, height);
             let imageData = canvas.getImageData(0, 0, width, height);
             let jsQR = await asyncRequirejsQR();
-            let result =jsQR(imageData.data, imageData.width, imageData.height);
-            if (result){
-              refResult.current.innerText = result.data;
+            let dst =jsQR(imageData.data, imageData.width, imageData.height);
+            if (dst){
+              //refResult.current.innerText = result.data;
+              setResult(dst);
               break;
             }
             await asyncWait(500); // 500ms待機する
@@ -64,7 +67,7 @@ define([
     
     return (
       <div>
-        <div id="result" ref={refResult}>null</div>
+        <div id="result">Result：{result}</div>
         <video id="player" ref={refVideo} autoPlay></video>
         <canvas id="snapshot" ref={refSnap} width="480" height="640"></canvas>
       </div>
