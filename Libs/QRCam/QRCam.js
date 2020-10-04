@@ -34,6 +34,8 @@ define([
     const refVideo = React.useRef();
     const refSnap = React.useRef();
     const refResult = React.useRef();
+    const width = 480;
+    const height = 640;
     React.useEffect(() =>{
       let unmounted = false;
       //let width = refSnap.current.width;
@@ -47,15 +49,13 @@ define([
             stream = await navigator.mediaDevices.getUserMedia({
               video: {
                 facingMode: "environment", 
-                width : 640,
-                height : 640
+                width : width,
+                height : height
               },
               audio: false
             });
             const currentTrack = getCurrentTrack(stream);
             refVideo.current.srcObject = stream;
-            refSnap.current.width = currentTrack.width;
-            refSnap.current.height = currentTrack.height;
 
             // setIntervalの代用
             while ( true ){ 
@@ -90,7 +90,7 @@ define([
       <div>
         <div id="result" ref={refResult}>{`Result：${result}`}</div>
         <video id="player" ref={refVideo} autoPlay></video>
-        <canvas id="snapshot" ref={refSnap}></canvas>
+        <canvas id="snapshot" ref={refSnap} width={width} height={height}></canvas>
       </div>
     )
   }
