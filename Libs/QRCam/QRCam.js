@@ -47,6 +47,8 @@ define([
             stream = await navigator.mediaDevices.getUserMedia({
               video: {
                 facingMode: "environment", 
+                width : 640,
+                height : 640
               },
               audio: false
             });
