@@ -50,10 +50,10 @@ define([
               },
               audio: false
             });
-            const {width, height} = getCurrentTrack(stream);
+            const currentTrack = getCurrentTrack(stream);
             refVideo.current.srcObject = stream;
-            refSnap.current.width = width;
-            refSnap.current.height = height;
+            refSnap.current.width = currentTrack.width;
+            refSnap.current.height = currentTrack.height;
 
             // setIntervalの代用
             while ( true ){ 
