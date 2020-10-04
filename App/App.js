@@ -11,6 +11,7 @@ define(
     'material-ui',
 
     'jsx!../Libs/Mermaid/Mermaid',
+    'jsx!../Libs/QRCam/QRCam',
   ],
   (
     React,
@@ -22,6 +23,7 @@ define(
     { Box },
 
     Mermaid,
+    QRCam,
   )=>{
 
   const regionManeger = {
