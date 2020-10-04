@@ -30,6 +30,7 @@ define([
   }
 
   const QRCam = ()=>{
+    const { state, dispatch } = React.useContext(Store);
     const [result, setResult] = React.useState(undefined);
     const refVideo = React.useRef();
     const refSnap = React.useRef();
@@ -73,6 +74,7 @@ define([
           }catch(e){
             //console.log(JSON.stringify(err));
             console.log(e);
+            dispatch({ type: ActionType.ERR, value:e.message});
           }finally{
             if(stream) stream.getVideoTracks.forEach(track=>track.stop());
             stream = undefined;
