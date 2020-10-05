@@ -63,8 +63,8 @@ define([
 
             // setIntervalの代用
             while ( true ){ 
-              canvas.drawImage(refVideo.current, 0, 0, size.width, size.height);
-              let imageData = canvas.getImageData(0, 0, size.width, size.height);
+              canvas.drawImage(refVideo.current, 0, 0, width, height);
+              let imageData = canvas.getImageData(0, 0, width, height);
               let jsQR = await asyncRequirejsQR();
               let dst =jsQR(imageData.data, imageData.width, imageData.height);
               if (dst){
