@@ -32,13 +32,13 @@ define([
   const QRCam = ()=>{
     const { state, dispatch } = React.useContext(Store);
     const [result, setResult] = React.useState(undefined);
-    const [size, setSize] = React.useState({width:460,height:640});
-
+    const [size, setSize] = React.useState({width:480,height:640});
+    const camWidth = 640;
+    const camHeight = 480;
     const refVideo = React.useRef();
     const refSnap = React.useRef();
     const refResult = React.useRef();
-    const camWidth = 640;
-    const camHeight = 480;
+
     React.useEffect(() =>{
       let unmounted = false;
       setSize({width:window.parent.screen.width, height:window.parent.screen.height});
@@ -70,15 +70,13 @@ define([
               let jsQR = await asyncRequirejsQR();
               let dst =jsQR(imageData.data, imageData.width, imageData.height);
               if (dst){
-                //refResult.current.innerText = result.data;
-                setResult(dst.data);
+                setResult(dst.data);//refResult.current.innerText = result.data;
                 break;
               }
               await asyncWait(500); // 500ms待機する
             }
           }catch(e){
-            //console.log(JSON.stringify(err));
-            console.log(e);
+            console.log(e);//console.log(JSON.stringify(err));
             dispatch({ type: ActionType.ERR, value:e.message});
           }finally{
             if(stream) stream.getVideoTracks.forEach(track=>track.stop());
