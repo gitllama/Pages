@@ -62,6 +62,13 @@ define([
             refVideo.current.srcObject = stream;
             // setIntervalの代用
             while ( true ){ 
+              if(state.screen.width != width){
+                width =  state.screen.width > state.screen.height ? camWidth : camHeight;
+                height = state.screen.width > state.screen.height ? camHeight : camWidth;
+                refSnap.current.width = width;
+                refSnap.current.height = height;
+              }
+
               canvas.drawImage(refVideo.current, 0, 0, width, height);
               let imageData = canvas.getImageData(0, 0, width, height);
               let jsQR = await asyncRequirejsQR();
@@ -86,7 +93,7 @@ define([
         if(stream) stream.getVideoTracks.forEach(track=>track.stop());
         stream = undefined;
       });
-    }, [state.screen]);
+    }, []);
     
     return (
       <div>
