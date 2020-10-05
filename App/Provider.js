@@ -22,10 +22,21 @@ define(
     </React.Suspense>
   */
 
+  //イベントリスナー
+  const screenChanged =(dispatch)=> window.addEventListener("orientationchange", ()=>{
+    setTimeout(()=>{ //遅延させないと処理間に合わない？
+      const width = window.parent.screen.width
+      const height = window.parent.screen.height
+      dispatch({ type: ActionType.SCREEN, value:{width:width,height:height}});
+    }, 100);
+  });
+
+
   const Provider = ({children}) => {
     const [state, dispatch] = React.useReducer(reducer, initialState);
     React.useEffect(() => {
       console.log('Provider mounting...');
+      screenChanged(dispatch);
       dispatch({ type: ActionType.LOADED});
       return () => console.log('Provider unmounting...');
     }, []);

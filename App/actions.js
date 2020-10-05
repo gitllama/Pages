@@ -8,6 +8,7 @@ define(['immer'],({produce})=>{
     'LOADED',
     'NAVIGATE',
     'TITLE',
+    'SCREEN',
 
     'ERR',
     'WARNING',

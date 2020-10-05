@@ -21,6 +21,8 @@ define(['immer'],({produce})=>{
     
     TITLE : (draft, action) => { draft.title = action.value; },
 
+    SCREEN: (draft, action) => { draft.screen = action.value; },
+
     ERR : (draft, action) => { draft.err = ({ 
         handled: false, 
         type : 'err', 

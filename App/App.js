@@ -12,6 +12,7 @@ define(
 
     'jsx!../Libs/Mermaid/Mermaid',
     'jsx!../Libs/QRCam/QRCam',
+    'jsx!App/Components/Home',
   ],
   (
     React,
@@ -24,12 +25,14 @@ define(
 
     Mermaid,
     QRCam,
+    Home
   )=>{
 
   const regionManeger = {
-    ["Home"] : (<div>under construction</div>),
+    ["Home"] : (<Home/>),
     ["Mermaid"] : (<Mermaid/>),
     ["QRCam"] : (<QRCam/>),
+    ["Default"] : (<div>under construction</div>),
   };
   
   const App = () => (

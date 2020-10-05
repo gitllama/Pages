@@ -32,7 +32,6 @@ define([
   const QRCam = ()=>{
     const { state, dispatch } = React.useContext(Store);
     const [result, setResult] = React.useState(undefined);
-    const [size, setSize] = React.useState({width:480,height:640});
     const camWidth = 640;
     const camHeight = 480;
     const refVideo = React.useRef();
@@ -41,9 +40,8 @@ define([
 
     React.useEffect(() =>{
       let unmounted = false;
-      setSize({width:window.parent.screen.width, height:window.parent.screen.height});
-      //let width = refSnap.current.width;
-      //let height = refSnap.current.height;
+      let width = refSnap.current.width;
+      let height = refSnap.current.height;
       let canvas = refSnap.current.getContext("2d");
       let stream = undefined;
       (async ()=>{
@@ -89,13 +87,15 @@ define([
         if(stream) stream.getVideoTracks.forEach(track=>track.stop());
         stream = undefined;
       });
-    }, []);
+    }, [state.screen]);
     
     return (
       <div>
         <div id="result" ref={refResult}>{`Result：${result}`}</div>
         <video id="player" ref={refVideo} autoPlay></video>
-        <canvas id="snapshot" ref={refSnap} width={size.width} height={size.height}></canvas>
+        <canvas id="snapshot" ref={refSnap} 
+          width={320} 
+          height={state.screen.height * 320 / state.screen.width}></canvas>
       </div>
     )
   }
