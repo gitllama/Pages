@@ -34,16 +34,15 @@ define([
     const [result, setResult] = React.useState(undefined);
     const camWidth = 640;
     const camHeight = 480;
+
     const refVideo = React.useRef();
     const refSnap = React.useRef();
     const refResult = React.useRef();
 
     React.useEffect(() =>{
       let unmounted = false;
-      let width =  state.screen.width > state.screen.height ? camWidth : camHeight;
-      let height = state.screen.width > state.screen.height ? camHeight : camWidth;
-      refSnap.current.width = width;
-      refSnap.current.height = height;
+      //refSnap.current.width = width;
+      //refSnap.current.height = height;
       let canvas = refSnap.current.getContext("2d");
       let stream = undefined;
       (async ()=>{
@@ -62,13 +61,8 @@ define([
             refVideo.current.srcObject = stream;
             // setIntervalの代用
             while ( true ){ 
-              if(state.screen.width != width){
-                width =  state.screen.width > state.screen.height ? camWidth : camHeight;
-                height = state.screen.width > state.screen.height ? camHeight : camWidth;
-                refSnap.current.width = width;
-                refSnap.current.height = height;
-              }
-
+              let width = refSnap.current.width;
+              let height = refSnap.current.height;
               canvas.drawImage(refVideo.current, 0, 0, width, height);
               let imageData = canvas.getImageData(0, 0, width, height);
               let jsQR = await asyncRequirejsQR();
@@ -99,7 +93,9 @@ define([
       <div>
         <div id="result" ref={refResult}>{`Result：${result}`}</div>
         <video id="player" ref={refVideo} autoPlay></video>
-        <canvas id="snapshot" ref={refSnap}></canvas>
+        <canvas id="snapshot" ref={refSnap}
+          width={state.screen.width > state.screen.height ? camWidth : camHeight}
+          height={state.screen.width > state.screen.height ? camHeight : camWidth}></canvas>
       </div>
     )
   }
