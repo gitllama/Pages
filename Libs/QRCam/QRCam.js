@@ -32,13 +32,16 @@ define([
   const QRCam = ()=>{
     const { state, dispatch } = React.useContext(Store);
     const [result, setResult] = React.useState(undefined);
+    const [size, setSize] = React.useState({width:460,height:640});
+
     const refVideo = React.useRef();
     const refSnap = React.useRef();
     const refResult = React.useRef();
-    const width = 480;
-    const height = 640;
+    const camWidth = 640;
+    const camHeight = 480;
     React.useEffect(() =>{
       let unmounted = false;
+      setSize({width:window.parent.screen.width, height:window.parent.screen.height});
       //let width = refSnap.current.width;
       //let height = refSnap.current.height;
       let canvas = refSnap.current.getContext("2d");
@@ -46,13 +49,15 @@ define([
       (async ()=>{
         if (!unmounted){
           try{
+            //
+
             // カメラストリームをプレイヤーのデータに設定
             stream = await navigator.mediaDevices.getUserMedia({
               audio: false,             
               video: {
                 facingMode: "environment", 
-                width : height,
-                height : width
+                width : camWidth,
+                height : camHeight
               },
             });
             //const currentTrack = getCurrentTrack(stream);
@@ -92,7 +97,7 @@ define([
       <div>
         <div id="result" ref={refResult}>{`Result：${result}`}</div>
         <video id="player" ref={refVideo} autoPlay></video>
-        <canvas id="snapshot" ref={refSnap} width={width} height={height}></canvas>
+        <canvas id="snapshot" ref={refSnap} width={size.width} height={size.height}></canvas>
       </div>
     )
   }
