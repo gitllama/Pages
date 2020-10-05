@@ -40,15 +40,15 @@ define([
 
     React.useEffect(() =>{
       let unmounted = false;
-      let width = refSnap.current.width;
-      let height = refSnap.current.height;
+      let width =  state.screen.width > state.screen.height ? camWidth : camHeight;
+      let height = state.screen.width > state.screen.height ? camHeight : camWidth;
+      refSnap.current.width = width;
+      refSnap.current.height = height;
       let canvas = refSnap.current.getContext("2d");
       let stream = undefined;
       (async ()=>{
         if (!unmounted){
           try{
-            //
-
             // カメラストリームをプレイヤーのデータに設定
             stream = await navigator.mediaDevices.getUserMedia({
               audio: false,             
@@ -60,7 +60,6 @@ define([
             });
             //const currentTrack = getCurrentTrack(stream);
             refVideo.current.srcObject = stream;
-
             // setIntervalの代用
             while ( true ){ 
               canvas.drawImage(refVideo.current, 0, 0, width, height);
@@ -93,9 +92,7 @@ define([
       <div>
         <div id="result" ref={refResult}>{`Result：${result}`}</div>
         <video id="player" ref={refVideo} autoPlay></video>
-        <canvas id="snapshot" ref={refSnap} 
-          width={320} 
-          height={state.screen.height * 320 / state.screen.width}></canvas>
+        <canvas id="snapshot" ref={refSnap}></canvas>
       </div>
     )
   }
