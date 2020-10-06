@@ -10,9 +10,10 @@ define(
     'jsx!App/Components/AppBar',
     'material-ui',
 
+    'jsx!App/Components/Home',
     'jsx!../Libs/Mermaid/Mermaid',
     'jsx!../Libs/QRCam/QRCam',
-    'jsx!App/Components/Home',
+    'jsx!../Libs/QRCam/CreateQR',
   ],
   (
     React,
@@ -23,15 +24,17 @@ define(
     AppBar,
     { Box },
 
+    Home,
     Mermaid,
     QRCam,
-    Home
+    CreateQR,
   )=>{
 
   const regionManeger = {
     ["Home"] : (<Home/>),
     ["Mermaid"] : (<Mermaid/>),
     ["QRCam"] : (<QRCam/>),
+    ["CreateQR"] : (<CreateQR/>),
     ["Default"] : (<div>under construction</div>),
   };
   
@@ -41,7 +44,7 @@ define(
       <AppBar title="Test" regions={regionManeger}>
         <Loading/>
         <Box mt={10} width="auto" minHeight={480} bgcolor="grey.300">
-          <Selector defultRegion='Home'>
+          <Selector defultRegion='CreateQR'>
             {regionManeger}
           </Selector>
         </Box>

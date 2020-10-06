@@ -18,7 +18,19 @@
             'babel': 'https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/6.26.0/babel.min',
             'react': 'https://cdnjs.cloudflare.com/ajax/libs/react/16.8.6/umd/react.production.min',
             'react-dom': 'https://cdnjs.cloudflare.com/ajax/libs/react-dom/16.8.6/umd/react-dom.production.min'
+            
+            // 拡張子が異なるものはダミーのURLパラメータを使用して読める
+            // 'octokit':'https://cdn.skypack.dev/@octokit/rest/g=scripts&dummy=',
           }
+          // shim: {
+          //   'abc': ['a', 'b', 'c'] // a.js -> b.js -> c.js の順に実行される
+          // }
+          // shim: {
+          //   'lib/non-amd-lib': {
+          //      deps: ['lib/underscore-min'],
+          //      exports: 'mine'
+          //    }
+          // }
         });
         require(['jsx!App/index']);
     </script>
