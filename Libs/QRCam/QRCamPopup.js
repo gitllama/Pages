@@ -92,7 +92,7 @@ define([
     };
     return (
       <div>
-        <div id="result" ref={refResult}>{`Result：${result}`}</div>
+        <div id="result" >{`Result：${result}`}</div>
         <Button variant="outlined" color="primary" onClick={handleClickOpen}>
           Open
         </Button>
