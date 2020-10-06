@@ -11,6 +11,18 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" />
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
 
+    <script type="module">
+      import { Octokit } from "https://cdn.skypack.dev/@octokit/rest";
+      import { graphql } from "https://cdn.skypack.dev/@octokit/graphql";
+
+      window.Octokit = Octokit;
+      window.graphql = graphql;
+
+      // <script src="https://cdnjs.cloudflare.com/ajax/libs/systemjs/6.6.1/system.min.js"
+      // System.import('https://cdn.skypack.dev/@octokit/rest').then(f=> {
+      //  console.log(f)
+      // });
+    </script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js"></script>
     <script>
       window.babelConfig = {
@@ -26,7 +38,7 @@
           'material-ui': 'https://unpkg.com/@material-ui/core@latest/umd/material-ui.production.min',
 
           'immer': 'https://unpkg.com/immer@6.0.3/dist/immer.umd.production.min',
-        }
+        },
       });
       require(['jsx!App/App']);
     </script>
