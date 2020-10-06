@@ -30,8 +30,7 @@ define([
     });
   }
 
-  const PopupCam = ()=>{
-    const { state, dispatch } = React.useContext(Store);
+  const PopupCam =({callback})=>{
     const camWidth = 640;
     const camHeight = 480;
     const refVideo = React.useRef();
@@ -51,6 +50,13 @@ define([
             });
             refVideo.current.srcObject = stream;
             while ( true ){ 
+              let canvas = refVideo.current.getContext("2d");
+              canvas.current.getImageData(0, 0, width, height);
+              callback(undefined);
+              if (dst){
+                callback(dst.data);
+                break;
+              }
               await asyncWait(500); // 500ms待機する
             }
           }catch(e){
@@ -86,6 +92,7 @@ define([
     };
     return (
       <div>
+        <div id="result" ref={refResult}>{`Result：${result}`}</div>
         <Button variant="outlined" color="primary" onClick={handleClickOpen}>
           Open
         </Button>
@@ -93,7 +100,7 @@ define([
           onClose={handleClose}
           aria-labelledby="alert-dialog-title"
           aria-describedby="alert-dialog-description">
-          <PopupCam/>
+          <PopupCam callback={(dst)=>{setResult(dst)}}/>
           <DialogActions>
             <Button onClick={handleClose} color="primary" autoFocus>
               Cancel
