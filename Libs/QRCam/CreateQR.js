@@ -43,24 +43,6 @@ define([
     },
   }));
 
-  // https://github.com/kazuhikoarase/qrcode-generator
-  const asyncCallQRCode = ()=>{
-    return new Promise((resolve, reject) => {
-      requirejs(
-        ['https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js']
-        , (dst)=> resolve(dst)
-      );
-    });
-  };
-
-
-  const asyncMakeQRCode = async (code)=>{
-    const qrcode = await asyncCallQRCode(); //なぜかグローバルになってるうざい
-    const qr = qrcode(0, 'L');
-    qr.addData(code);
-    qr.make();
-    return qr.createImgTag();
-  }
 
   const asyncGetIssueFromNum = async (owner, repo, num, accessToken)=> {
     if(accessToken == undefined){
@@ -137,7 +119,16 @@ define([
           url : issue.url
         }
         if (!unmounted) {
-          ref.current.innerHTML = await asyncMakeQRCode(JSON.stringify(json));
+          requirejs(['./Libs/QRCam/qrcode.min.js'],()=>{
+            const qr = new QRCode(ref.current, {
+              text: JSON.stringify(json),
+              width: 128,
+              height: 128,
+              colorDark : "#000000",
+              colorLight : "#ffffff",
+              correctLevel : QRCode.CorrectLevel.H
+            });  
+          });
         }
       })();
       return (()=>{ unmounted = true; });

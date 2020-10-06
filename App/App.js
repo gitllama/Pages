@@ -14,6 +14,7 @@ define(
     'jsx!../Libs/Mermaid/Mermaid',
     'jsx!../Libs/QRCam/QRCam',
     'jsx!../Libs/QRCam/CreateQR',
+    'jsx!../Libs/QRCam/QRCamPopup',
   ],
   (
     React,
@@ -28,12 +29,14 @@ define(
     Mermaid,
     QRCam,
     CreateQR,
+    QRCamPopup
   )=>{
 
   const regionManeger = {
     ["Home"] : (<Home/>),
     ["Mermaid"] : (<Mermaid/>),
     ["QRCam"] : (<QRCam/>),
+    ["QRCamPopup"] : (<QRCamPopup/>),
     ["CreateQR"] : (<CreateQR/>),
     ["Default"] : (<div>under construction</div>),
   };
