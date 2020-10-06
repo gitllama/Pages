@@ -30,7 +30,7 @@ define([
     });
   }
 
-  const PopupCam =({callback})=>{
+  const PopupCam =({open, callback})=>{
     const { state, dispatch } = React.useContext(Store);
     const camWidth = 640;
     const camHeight = 480;
@@ -81,6 +81,7 @@ define([
       });
     }, []);
     const handleClose = () => {
+      
       callback(result);
       //setResult(dst);
     };
