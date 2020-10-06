@@ -31,12 +31,16 @@ define([
   }
 
   const PopupCam =({callback})=>{
+    const { state, dispatch } = React.useContext(Store);
     const camWidth = 640;
     const camHeight = 480;
+    const [result, setResult] = React.useState(undefined);
     const refVideo = React.useRef();
+    const refSnap = React.useRef();
     React.useEffect(() =>{
       let unmounted = false;
       let stream = undefined;
+      let canvas = refSnap.current.getContext("2d");
       (async ()=>{
         if (!unmounted){
           try{
@@ -49,11 +53,15 @@ define([
               },
             });
             refVideo.current.srcObject = stream;
-            while ( true ){ 
-              let canvas = refVideo.current.getContext("2d");
-              canvas.current.getImageData(0, 0, width, height);
-              callback(undefined);
+            while ( true ){
+              let width = state.screen.width > state.screen.height ? camWidth : camHeight;
+              let height = state.screen.width > state.screen.height ? camHeight : camWidth;
+              canvas.drawImage(refVideo.current, 0, 0, width, height);
+              let imageData = canvas.getImageData(0, 0, width, height);
+              let jsQR = await asyncRequirejsQR();
+              let dst = jsQR(imageData.data, imageData.width, imageData.height);
               if (dst){
+                setResult(dst.data);
                 callback(dst.data);
                 break;
               }
@@ -75,7 +83,9 @@ define([
     }, []);
     return (
       <DialogContent>
+        <div id="result" >{`Result：${result}`}</div>
         <video id="player" ref={refVideo} autoPlay></video>
+        <canvas id="snapshot" ref={refSnap} width={0} height={0}></canvas>
       </DialogContent>
     )
   }
