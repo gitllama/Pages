@@ -7,7 +7,7 @@ define([
   React,
   ActionType,
   Store,
-  {Grid, Paper,Box,makeStyles}
+  {Dialog, DialogActions, DialogContent, Button}
 )=>{
 
   const asyncWait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
@@ -31,6 +31,7 @@ define([
   }
 
   const PopupCam = ()=>{
+    const { state, dispatch } = React.useContext(Store);
     const camWidth = 640;
     const camHeight = 480;
     const refVideo = React.useRef();
@@ -73,7 +74,7 @@ define([
     )
   }
 
-  const QRCam = ()=>{
+  const QRCamPopup = ()=>{
     const { state, dispatch } = React.useContext(Store);
     const [result, setResult] = React.useState(undefined);
     const [open, setOpen] = React.useState(false);
@@ -85,7 +86,6 @@ define([
     };
     return (
       <div>
-        <div id="result" ref={refResult}>{`Result：${result}`}</div>
         <Button variant="outlined" color="primary" onClick={handleClickOpen}>
           Open
         </Button>
@@ -104,5 +104,5 @@ define([
     )
   }
 
-  return QRCam;
+  return QRCamPopup;
 });
