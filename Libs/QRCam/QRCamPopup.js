@@ -62,8 +62,7 @@ define([
               let dst = jsQR(imageData.data, imageData.width, imageData.height);
               if (dst){
                 setResult(dst.data);
-                callback(dst.data);
-                break;
+                //break;
               }
               await asyncWait(500); // 500ms待機する
             }
@@ -81,12 +80,27 @@ define([
         stream = undefined;
       });
     }, []);
+    const handleClose = () => {
+      callback(result);
+      //setResult(dst);
+    };
     return (
-      <DialogContent>
-        <div id="result" >{`Result：${result}`}</div>
-        <video id="player" ref={refVideo} autoPlay></video>
-        <canvas id="snapshot" ref={refSnap} width={0} height={0}></canvas>
-      </DialogContent>
+      <Dialog open={open}
+        onClose={handleClose}
+        aria-labelledby="alert-dialog-title"
+        aria-describedby="alert-dialog-description">
+        <DialogContent>
+          <div id="result" >{`Result：${result}`}</div>
+          <video id="player" ref={refVideo} autoPlay></video>
+          <canvas id="snapshot" ref={refSnap} width={0} height={0}></canvas>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleClose} color="primary" autoFocus>
+            Cancel
+          </Button>
+        </DialogActions>
+    </Dialog>
+
     )
   }
 
@@ -97,8 +111,9 @@ define([
     const handleClickOpen = () => {
       setOpen(true);
     };
-    const handleClose = () => {
+    const handleClose = (dst) => {
       setOpen(false);
+      setResult(dst);
     };
     return (
       <div>
@@ -106,17 +121,7 @@ define([
         <Button variant="outlined" color="primary" onClick={handleClickOpen}>
           Open
         </Button>
-        <Dialog open={open}
-          onClose={handleClose}
-          aria-labelledby="alert-dialog-title"
-          aria-describedby="alert-dialog-description">
-          <PopupCam callback={(dst)=>{setResult(dst)}}/>
-          <DialogActions>
-            <Button onClick={handleClose} color="primary" autoFocus>
-              Cancel
-            </Button>
-          </DialogActions>
-        </Dialog>
+        <PopupCam open={open} callback={(dst)=>{handleClose}} />
       </div>
     )
   }
