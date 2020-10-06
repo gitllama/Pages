@@ -30,17 +30,7 @@ define([
     });
   }
 
-  const PopupCam =({open, callback})=>{
-    const { state, dispatch } = React.useContext(Store);
-    const camWidth = 640;
-    const camHeight = 480;
-    const [result, setResult] = React.useState(undefined);
-    const refVideo = React.useRef();
-    const refSnap = React.useRef();
-    React.useEffect(() =>{
-      let unmounted = false;
-      let stream = undefined;
-      let canvas = refSnap.current.getContext("2d");
+/*
       (async ()=>{
         if (!unmounted){
           try{
@@ -54,6 +44,7 @@ define([
             });
             refVideo.current.srcObject = stream;
             while ( true ){
+              let canvas = refSnap.current.getContext("2d");
               let width = state.screen.width > state.screen.height ? camWidth : camHeight;
               let height = state.screen.width > state.screen.height ? camHeight : camWidth;
               canvas.drawImage(refVideo.current, 0, 0, width, height);
@@ -62,9 +53,10 @@ define([
               let dst = jsQR(imageData.data, imageData.width, imageData.height);
               if (dst){
                 setResult(dst.data);
-                //break;
+                break;
               }
-              await asyncWait(500); // 500ms待機する
+              console.log(new Date())
+              await asyncWait(300); // 500ms待機する
             }
           }catch(e){
             dispatch({ type: ActionType.ERR, value:e.message});
@@ -74,16 +66,59 @@ define([
           }
         }
       })();
-      return (()=>{ 
-        unmounted = true; 
-        if(stream) stream.getVideoTracks.forEach(track=>track.stop());
-        stream = undefined;
+*/
+  const camWidth = 640;
+  const camHeight = 480;
+
+  const GetQR =async (canvas, refVideo, state) =>{
+    let width = state.screen.width > state.screen.height ? camWidth : camHeight;
+    let height = state.screen.width > state.screen.height ? camHeight : camWidth;
+    canvas.drawImage(refVideo.current, 0, 0, width, height);
+    let imageData = canvas.getImageData(0, 0, width, height);
+    let jsQR = await asyncRequirejsQR();
+    let dst = jsQR(imageData.data, imageData.width, imageData.height);
+    return dst != undefined ? dst.data : undefined;
+  }
+  
+  // 起動時にuseEffectが呼ばれる
+  const PopupCam =({open, callback})=>{
+    const { state, dispatch } = React.useContext(Store);
+    const refVideo = React.useRef();
+    const refSnap = React.useRef();
+    React.useEffect(() =>{
+      let unmounted = false;
+      let stream = undefined;
+
+      (async ()=>{
+        if(!open) return;
+        stream = await navigator.mediaDevices.getUserMedia({
+          audio: false,             
+          video: {
+            facingMode: "environment", 
+            width : camWidth,
+            height : camHeight
+          },
+        });
+        refVideo.current.srcObject = stream;
+        let dst = undefined;
+        while ((!unmounted) && open){
+          let canvas = refSnap.current.getContext("2d");
+          dst = await GetQR(canvas, refVideo, state);
+          if(dst != undefined) break;
+          console.log(new Date())
+          await asyncWait(300); // 500ms待機する
+        }
+        callback(dst);
+      })();
+
+      return (()=>{
+        console.log("stop") // popup開くときも閉じるときも呼ばれる
+        unmounted = true;
+        if(stream) stream.getVideoTracks().forEach(track=>track.stop());
       });
-    }, []);
+    }, [open]);
     const handleClose = () => {
-      
-      callback(result);
-      //setResult(dst);
+      callback(undefined);
     };
     return (
       <Dialog open={open}
@@ -91,9 +126,10 @@ define([
         aria-labelledby="alert-dialog-title"
         aria-describedby="alert-dialog-description">
         <DialogContent>
-          <div id="result" >{`Result：${result}`}</div>
           <video id="player" ref={refVideo} autoPlay></video>
-          <canvas id="snapshot" ref={refSnap} width={0} height={0}></canvas>
+          <canvas  style={{display:"none"}} id="snapshot" ref={refSnap} 
+          width={state.screen.width > state.screen.height ? camWidth : camHeight} 
+          height={state.screen.width > state.screen.height ? camHeight : camWidth}></canvas>
         </DialogContent>
         <DialogActions>
           <Button onClick={handleClose} color="primary" autoFocus>
@@ -122,7 +158,7 @@ define([
         <Button variant="outlined" color="primary" onClick={handleClickOpen}>
           Open
         </Button>
-        <PopupCam open={open} callback={(dst)=>{handleClose}} />
+        <PopupCam open={open} callback={(dst)=>{handleClose(dst);}} />
       </div>
     )
   }

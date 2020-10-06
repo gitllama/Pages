@@ -77,15 +77,13 @@ define([
             console.log(e);//console.log(JSON.stringify(err));
             dispatch({ type: ActionType.ERR, value:e.message});
           }finally{
-            if(stream) stream.getVideoTracks.forEach(track=>track.stop());
-            stream = undefined;
+            if(stream) stream.getVideoTracks().forEach(track=>track.stop());
           }
         }
       })();
       return (()=>{ 
         unmounted = true; 
-        if(stream) stream.getVideoTracks.forEach(track=>track.stop());
-        stream = undefined;
+        if(stream) stream.getVideoTracks().forEach(track=>track.stop());
       });
     }, []);
     
