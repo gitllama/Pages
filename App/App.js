@@ -47,7 +47,7 @@ define(
       <AppBar title="Test" regions={regionManeger}>
         <Loading/>
         <Box mt={10} width="auto" minHeight={480} bgcolor="grey.300">
-          <Selector defultRegion='CreateQR'>
+          <Selector defultRegion='Home'>
             {regionManeger}
           </Selector>
         </Box>
