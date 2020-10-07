@@ -37,8 +37,8 @@ define(
 
   const App = () => (
     <Provider>
-      <CssBaseline />
       <ThemeProvider theme={theme}>
+      <CssBaseline />
       <ErrSnackbar/>         
       <AppBar title="Test" regions={regionManeger}>
         <Loading/>
