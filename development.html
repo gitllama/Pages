@@ -15,14 +15,8 @@
     <script type="module">
       import { Octokit } from "https://cdn.skypack.dev/@octokit/rest";
       import { graphql } from "https://cdn.skypack.dev/@octokit/graphql";
-
-      // <script src="https://cdnjs.cloudflare.com/ajax/libs/systemjs/6.6.1/system.min.js"
-      // System.import('https://cdn.skypack.dev/@octokit/rest').then(f=> {
-      //  console.log(f)
-      // });
       window.Octokit = Octokit;
       window.graphql = graphql;
-    
       window.babelConfig = {
       };
       requirejs.config({

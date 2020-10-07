@@ -20,18 +20,24 @@ define(
     Selector,
     AppBar,
     {A, B, C},
-    { Box }
+    { Box, ThemeProvider, createMuiTheme,responsiveFontSizes  }
   )=>{
 
+  let theme = createMuiTheme();
+  theme = responsiveFontSizes(theme);
+  
   const regionManeger = {
     ["A"] : (<A/>),
     ["B"] : (<B/>),
     ["C"] : (<C/>),
     ["D"] : (<div>under construction</div>),
   };
-  
+
+
+
   const App = () => (
     <Provider>
+      <ThemeProvider theme={theme}>
       <ErrSnackbar/>         
       <AppBar title="Test" regions={regionManeger}>
         <Loading/>
@@ -44,6 +50,7 @@ define(
           <Copyright name="gitllama" href="https://github.com/gitllama"/>
         </Box>
       </AppBar>
+      </ThemeProvider>
     </Provider>
   );
   // mt : margin-top, width={1} : 100%
