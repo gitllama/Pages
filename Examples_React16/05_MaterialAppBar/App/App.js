@@ -20,7 +20,7 @@ define(
     Selector,
     AppBar,
     {A, B, C},
-    { Box, ThemeProvider, createMuiTheme,responsiveFontSizes  }
+    { Box, ThemeProvider, createMuiTheme,responsiveFontSizes,CssBaseline   }
   )=>{
 
   let theme = createMuiTheme();
@@ -37,6 +37,7 @@ define(
 
   const App = () => (
     <Provider>
+      <CssBaseline />
       <ThemeProvider theme={theme}>
       <ErrSnackbar/>         
       <AppBar title="Test" regions={regionManeger}>
