@@ -30,104 +30,89 @@ define([
     });
   }
 
-/*
-      (async ()=>{
-        if (!unmounted){
-          try{
-            stream = await navigator.mediaDevices.getUserMedia({
-              audio: false,             
-              video: {
-                facingMode: "environment", 
-                width : camWidth,
-                height : camHeight
-              },
-            });
-            refVideo.current.srcObject = stream;
-            while ( true ){
-              let canvas = refSnap.current.getContext("2d");
-              let width = state.screen.width > state.screen.height ? camWidth : camHeight;
-              let height = state.screen.width > state.screen.height ? camHeight : camWidth;
-              canvas.drawImage(refVideo.current, 0, 0, width, height);
-              let imageData = canvas.getImageData(0, 0, width, height);
-              let jsQR = await asyncRequirejsQR();
-              let dst = jsQR(imageData.data, imageData.width, imageData.height);
-              if (dst){
-                setResult(dst.data);
-                break;
-              }
-              console.log(new Date())
-              await asyncWait(300); // 500ms待機する
-            }
-          }catch(e){
-            dispatch({ type: ActionType.ERR, value:e.message});
-          }finally{
-            if(stream) stream.getVideoTracks.forEach(track=>track.stop());
-            stream = undefined;
-          }
-        }
-      })();
-*/
-  const camWidth = 640;
-  const camHeight = 480;
+  const camWidth = 320;
+  const camHeight = 240;
+  const waitTime = 300;
 
-  const GetQR =async (canvas, refVideo, state) =>{
-    let width = state.screen.width > state.screen.height ? camWidth : camHeight;
-    let height = state.screen.width > state.screen.height ? camHeight : camWidth;
+  const asyncRunStream =async(target)=>{
+    const stream = await navigator.mediaDevices.getUserMedia({
+      audio: false,             
+      video: {
+        facingMode: "environment", 
+        width : camWidth,
+        height : camHeight
+      },
+    });
+    target.current.srcObject = stream;
+    target.current.srcObject.getVideoTracks().forEach(track=>{ 
+      console.log(track);
+    });
+  }
+
+  const StopStream =(target)=>{
+    if(target.current){
+      if(target.current.srcObject){
+        target.current.srcObject.getVideoTracks().forEach(track=>{ 
+          track.stop();
+          console.log(track);
+        });
+        target.current.srcObject = null;
+      }
+    }
+  }
+
+  const asyncGetQR = async (refSnap, refVideo) =>{
+    let canvas = refSnap.current.getContext("2d");
+    let width = refSnap.current.width;
+    let height = refSnap.current.height;
     canvas.drawImage(refVideo.current, 0, 0, width, height);
     let imageData = canvas.getImageData(0, 0, width, height);
     let jsQR = await asyncRequirejsQR();
     let dst = jsQR(imageData.data, imageData.width, imageData.height);
-    return dst != undefined ? dst.data : undefined;
+    return dst != undefined ? dst.data : null;
   }
   
-  // 起動時にuseEffectが呼ばれる
+  /* 
+    起動時にclose状態でもuseEffectが呼ばれ
+    open時に非描画状態に生成されたuseEffectがreturnする
+    close時にも当然returnする
+  */
   const PopupCam =({open, callback})=>{
     const { state, dispatch } = React.useContext(Store);
     const refVideo = React.useRef();
     const refSnap = React.useRef();
     React.useEffect(() =>{
       let unmounted = false;
-      let stream = undefined;
-
       (async ()=>{
-        if(!open) return;
-        stream = await navigator.mediaDevices.getUserMedia({
-          audio: false,             
-          video: {
-            facingMode: "environment", 
-            width : camWidth,
-            height : camHeight
-          },
-        });
-        refVideo.current.srcObject = stream;
-        let dst = undefined;
-        while ((!unmounted) && open){
-          let canvas = refSnap.current.getContext("2d");
-          dst = await GetQR(canvas, refVideo, state);
-          if(dst != undefined) break;
-          console.log(new Date())
-          await asyncWait(300); // 500ms待機する
+        try{
+          if(!open) return;
+          await asyncRunStream(refVideo);
+          while ((!unmounted) && open){
+            let dst = await asyncGetQR(refSnap, refVideo);
+            if(dst){
+              callback(dst);
+              break;
+            }
+            await asyncWait(waitTime);
+          }
+        }catch(e){
+          dispatch({ type: ActionType.ERR, value:e.message});
+          callback(null);
         }
-        callback(dst);
-      })();
-
+      })();  
       return (()=>{
-        console.log("stop") // popup開くときも閉じるときも呼ばれる
         unmounted = true;
-        if(stream) stream.getVideoTracks().forEach(track=>track.stop());
-      });
+        StopStream(refVideo);
+      });  
     }, [open]);
-    const handleClose = () => {
-      callback(undefined);
-    };
+    const handleClose = () => callback(null);
     return (
-      <Dialog open={open}
-        onClose={handleClose}
+      <Dialog open={open} onClose={handleClose}
         aria-labelledby="alert-dialog-title"
         aria-describedby="alert-dialog-description">
         <DialogContent>
-          <video id="player" ref={refVideo} autoPlay></video>
-          <canvas  style={{display:"none"}} id="snapshot" ref={refSnap} 
+          <video id="player" style={{display:"none"}} ref={refVideo} autoPlay></video>
+          <canvas id="snapshot" ref={refSnap} 
           width={state.screen.width > state.screen.height ? camWidth : camHeight} 
           height={state.screen.width > state.screen.height ? camHeight : camWidth}></canvas>
         </DialogContent>
@@ -141,21 +126,35 @@ define([
     )
   }
 
+
+  const initResult = {
+    owner : undefined,
+    repos : undefined,
+    title : undefined,
+    num : undefined,
+    source : undefined
+  } 
+
   const QRCamPopup = ()=>{
     const { state, dispatch } = React.useContext(Store);
-    const [result, setResult] = React.useState(undefined);
+    const [result, setResult] = React.useState(initResult);
     const [open, setOpen] = React.useState(false);
-    const handleClickOpen = () => {
-      setOpen(true);
-    };
     const handleClose = (dst) => {
       setOpen(false);
-      setResult(dst);
+      try{
+        setResult(Object.assign({},initResult,JSON.parse(dst)));
+      }catch(e){
+        setResult(Object.assign({},initResult,{source:dst}));
+      }      
     };
     return (
       <div>
-        <div id="result" >{`Result：${result}`}</div>
-        <Button variant="outlined" color="primary" onClick={handleClickOpen}>
+        <div id="result1" >{`owner : ${result.owner}`}</div>
+        <div id="result2" >{`repos：${result.repos}`}</div>
+        <div id="result3" >{`title：${result.title}`}</div>
+        <div id="result4" >{`num：${result.num}`}</div>
+        <div id="result5" >{`all：${result.source}`}</div>
+        <Button variant="outlined" color="primary" onClick={()=>setOpen(true)}>
           Open
         </Button>
         <PopupCam open={open} callback={(dst)=>{handleClose(dst);}} />
