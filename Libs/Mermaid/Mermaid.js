@@ -1,12 +1,13 @@
 'use strict';
 
 define([
-  'react', 'App/actions', 'App/store'
+  'react', 'App/actions', 'App/store', 'material-ui'
 ],  
 (
   React,
   ActionType,
-  Store
+  Store,
+  {Grid, Paper}
 )=>{
 
   const asyncCallA = ()=>{
@@ -57,6 +58,7 @@ define([
   const A =({children})=> {
     const { state, dispatch } = React.useContext(Store);
     const ref =  React.useRef(null);
+    const refContainer =  React.useRef(null);
     const clickEvent = React.useCallback((e) => dispatch({ type: ActionType.NAVIGATE, value : e.target.value }), []); 
     const errevent = React.useCallback((e) => 
       dispatch({ type: ActionType.ERR, value : "aaa" }) 
@@ -74,29 +76,33 @@ define([
           securityLevel: 'loose',
           theme: 'forest',
           flowchart:{
-            useMaxWidth:false,
+            //useMaxWidth:false, いれるとサイズが固定されてboxSizingが効かなくなる
             htmlLabels:true
           }
         });
         if (!unmounted) {
-          mermaid.mermaidAPI.render('mermaid_id', AsciiGraph("A"), (svg,bindEvents)=>{
-            ref.current.innerHTML = svg;
-            bindEvents();
-          });
+          mermaid.mermaidAPI.render(
+            'mermaid_id', 
+            AsciiGraph("A"), 
+            (svg,bindEvents)=>{
+              ref.current.innerHTML = svg;
+              bindEvents();
+            },
+            refContainer.current 
+            // 作業用のdivつけてないと再描画の度にゴミdivつくるらしい
+            // display:noneだと幅が取れなく描画崩れるそうなので裏に隠す方が良い
+          );
           dispatch({ type: ActionType.LOADED});
         }
       })();
       return (()=>{ unmounted = true; });
     }, []);
-    return (  
-      <div>
+    return ( 
+      <Grid item xs={12}>
+        <div id="container" ref={refContainer}/>
         <div ref={ref}/>
-      <div>A</div>
-        <button value='B' onClick={clickEvent}>B</button>
-        <button value='C' onClick={clickEvent}>C</button>
-        <button value='back' onClick={clickEvent}>back</button>
-        <button onClick={errevent}>err</button>
-      </div>
+        <Paper>xs=12</Paper>
+      </Grid>
     );
   }
 
