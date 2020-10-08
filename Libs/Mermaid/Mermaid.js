@@ -77,6 +77,7 @@ define([
           theme: 'forest',
           flowchart:{
             //useMaxWidth:false, いれるとサイズが固定されてboxSizingが効かなくなる
+            //useMaxWidth:640, これでもいいけど、divにmin maxWidth入れた方がはやいかも
             htmlLabels:true
           }
         });
@@ -100,7 +101,7 @@ define([
     return ( 
       <Grid item xs={12}>
         <div id="container" ref={refContainer}/>
-        <div ref={ref}/>
+        <div style={{minWidth:200, maxWidth:640}} ref={ref}/>
         <Paper>xs=12</Paper>
       </Grid>
     );
