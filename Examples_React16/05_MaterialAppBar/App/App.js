@@ -19,7 +19,7 @@ define(
     {Loading, Copyright, ErrSnackbar},
     Selector,
     AppBar,
-    {A, B, C},
+    {A, B, C, BoxTest},
     { Box, ThemeProvider, createMuiTheme,responsiveFontSizes,CssBaseline   }
   )=>{
 
@@ -30,6 +30,7 @@ define(
     ["A"] : (<A/>),
     ["B"] : (<B/>),
     ["C"] : (<C/>),
+    ["BoxTest"] : (<BoxTest/>),
     ["D"] : (<div>under construction</div>),
   };
 

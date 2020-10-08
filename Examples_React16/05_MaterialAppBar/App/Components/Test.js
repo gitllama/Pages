@@ -5,7 +5,7 @@ define(['react', 'App/actions', 'App/store', 'material-ui'],
   React,
   ActionType,
   Store,
-  {Backdrop, CircularProgress}
+  {Grid,Paper}
 )=>{
 
   const A =({children})=> {
@@ -51,5 +51,19 @@ define(['react', 'App/actions', 'App/store', 'material-ui'],
     );
   }
 
-  return {A, B, C};
+  const BoxTest =({children})=> {
+    const { state, dispatch } = React.useContext(Store);
+    const clickEvent = React.useCallback((e) => dispatch({ type: ActionType.NAVIGATE, value : e.target.value }), []); 
+    return (  
+      <Grid container>
+        <Grid item xs={12}>
+          <Paper>xs=12</Paper>
+        </Grid>
+        <Grid item xs={6}>
+          <Paper>xs=6</Paper>
+        </Grid>
+      </Grid>
+    );
+  }
+  return {A, B, C, BoxTest};
 });
