@@ -10,6 +10,8 @@ define([
   {Grid, Paper}
 )=>{
 
+  console.log("mermaid");
+
   const asyncCallA = ()=>{
     return new Promise((resolve, reject) => {
       requirejs(

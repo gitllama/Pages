@@ -6,9 +6,8 @@ define(
     'react-dom',
     'jsx!App/Provider',
     'jsx!App/Components/CommonParts',
-    'jsx!App/Components/Selector',
     'jsx!App/Components/AppBar',
-    'jsx!App/Components/Test',
+    'jsx!page',
 
     'material-ui'
   ],
@@ -17,22 +16,17 @@ define(
     ReactDOM, 
     Provider,
     {Loading, Copyright, ErrSnackbar},
-    Selector,
     AppBar,
-    {A, B, C, BoxTest},
+    Page,
+    
     { Box, ThemeProvider, createMuiTheme,responsiveFontSizes,CssBaseline   }
   )=>{
 
   let theme = createMuiTheme();
   theme = responsiveFontSizes(theme);
   
-  const regionManeger = {
-    ["A"] : (<A/>),
-    ["B"] : (<B/>),
-    ["C"] : (<C/>),
-    ["BoxTest"] : (<BoxTest/>),
-    ["D"] : (<div>under construction</div>),
-  };
+  const LazyComponent = React.lazy(()=> define(['jsx!App/Components/AppBar'],(AppBar)=> AppBar));
+  const LazyComponentA = React.lazy(()=> define(['jsx!App/Components/Test'],({A, B, C, BoxTest})=> A));
 
   const App = () => (
     <Provider>
@@ -42,9 +36,7 @@ define(
       <AppBar title="Test" regions={regionManeger}>
         <Loading/>
         <Box mt={10} width="auto" minHeight={480} bgcolor="grey.300">
-          <Selector defultRegion='A'>
-            {regionManeger}
-          </Selector>
+          <Page/>
         </Box>
         <Box mt={3}>
           <Copyright name="gitllama" href="https://github.com/gitllama"/>

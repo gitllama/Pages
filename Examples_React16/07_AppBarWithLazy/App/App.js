@@ -6,9 +6,7 @@ define(
     'react-dom',
     'jsx!App/Provider',
     'jsx!App/Components/CommonParts',
-    'jsx!App/Components/Selector',
     'jsx!App/Components/AppBar',
-    'jsx!App/Components/Test',
 
     'material-ui'
   ],
@@ -16,41 +14,33 @@ define(
     React,
     ReactDOM, 
     Provider,
-    {Loading, Copyright, ErrSnackbar},
-    Selector,
+    {Selector, lazy, Copyright, ErrSnackbar},
     AppBar,
-    {A, B, C, BoxTest},
-    { Box, ThemeProvider, createMuiTheme,responsiveFontSizes,CssBaseline   }
+    
+    { Box,CssBaseline   }
   )=>{
-
-  let theme = createMuiTheme();
-  theme = responsiveFontSizes(theme);
+  
+  //const LazyComponent = React.lazy(() => import('./LazyComponent'));
   
   const regionManeger = {
-    ["A"] : (<A/>),
-    ["B"] : (<B/>),
-    ["C"] : (<C/>),
-    ["BoxTest"] : (<BoxTest/>),
-    ["D"] : (<div>under construction</div>),
+    ["A"] : lazy('jsx!App/Components/Page-A'),
+    ["B"] : lazy('jsx!App/Components/Page-B'),
+    ["C"] : lazy('jsx!App/Components/Page-C'),
   };
 
   const App = () => (
     <Provider>
-      <ThemeProvider theme={theme}>
       <CssBaseline />
       <ErrSnackbar/>         
       <AppBar title="Test" regions={regionManeger}>
-        <Loading/>
         <Box mt={10} width="auto" minHeight={480} bgcolor="grey.300">
-          <Selector defultRegion='A'>
-            {regionManeger}
-          </Selector>
+          <Selector>{regionManeger}</Selector>
         </Box>
         <Box mt={3}>
           <Copyright name="gitllama" href="https://github.com/gitllama"/>
         </Box>
+        {}
       </AppBar>
-      </ThemeProvider>
     </Provider>
   );
   // mt : margin-top, width={1} : 100%
@@ -58,3 +48,4 @@ define(
   ReactDOM.render(<App />, document.getElementById('root'));
 
 });
+

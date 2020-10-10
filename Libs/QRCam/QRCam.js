@@ -9,6 +9,8 @@ define([
   Store
 )=>{
 
+  console.log("Call QRCam");
+
   const asyncWait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
   const asyncRequirejsQR = ()=>{
@@ -61,7 +63,7 @@ define([
             refVideo.current.srcObject = stream;
             // setIntervalの代用
             while ( true ){ 
-              let width = refSnap.current.width;
+              let width = refSnap.current.width; //抜けるときにnullつかんでるっぽい
               let height = refSnap.current.height;
               canvas.drawImage(refVideo.current, 0, 0, width, height);
               let imageData = canvas.getImageData(0, 0, width, height);

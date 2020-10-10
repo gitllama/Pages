@@ -12,7 +12,7 @@ define(
 
     'jsx!App/Components/Home',
     'jsx!../Libs/Mermaid/Mermaid',
-    'jsx!../Libs/QRCam/QRCam',
+    //'jsx!../Libs/QRCam/QRCam',
     'jsx!../Libs/QRCam/CreateQR',
     'jsx!../Libs/QRCam/QRCamPopup',
   ],
@@ -27,7 +27,7 @@ define(
 
     Home,
     Mermaid,
-    QRCam,
+    //QRCam,
     CreateQR,
     QRCamPopup
   )=>{
@@ -46,7 +46,7 @@ define(
       <ErrSnackbar/>         
       <AppBar title="Test" regions={regionManeger}>
         <Loading/>
-        <Box mt={10} width="auto" minHeight={480} bgcolor="grey.300">
+        <Box mt={10} width="auto" minHeight={480}>
           <Selector defultRegion='Home'>
             {regionManeger}
           </Selector>
@@ -58,6 +58,7 @@ define(
     </Provider>
   );
   // mt : margin-top, width={1} : 100%
+  // Boxの色 : bgcolor="grey.300"
 
   ReactDOM.render(<App />, document.getElementById('root'));
 

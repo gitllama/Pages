@@ -5,6 +5,11 @@
 https://gitllama.github.io/Pages/  
 https://gitllama.github.io/Pages/Examples_React16/05_MaterialAppBar
 
+手持ちデバイスではwidth  
+ Android Phone : 360  
+ Android Tablet : 640  
+ PC : 1920  
+
 ### 1-1. Examples_React16
 
 Github PagesのExamples  

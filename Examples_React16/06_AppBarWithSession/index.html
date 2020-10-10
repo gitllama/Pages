@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="minimum-scale=1, initial-scale=1, width=device-width" />
+  </head>
+  <body>
+    <!-- root -->
+    <div id="root"></div>
+    
+    <!-- Fonts and Icons to support Material Design -->
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js"></script>
+    <script>
+
+      //Reactの遅延リード面倒なのでSessionで遷移させる場合
+      // sessionStorage : 同一タブ
+      // localStorage : 同一ブラウザ内
+
+      window.regionManeger = {
+        ["A"] : 'App/Components/Page-A',
+        ["B"] : 'App/Components/Page-B',
+        ["C"] : 'App/Components/Page-C',
+      };
+      const params = (new URL(document.location)).searchParams;
+      
+      window.babelConfig = {
+      };
+      requirejs.config({
+        paths: {
+          'jsx': 'Loader/react-require.min',
+          'babel': 'https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/6.26.0/babel.min',
+          'react': 'https://unpkg.com/react@16/umd/react.development',
+          'react-dom': 'https://unpkg.com/react-dom@16/umd/react-dom.development',
+          'material-ui': 'https://unpkg.com/@material-ui/core@latest/umd/material-ui.development',
+          'page': (regionManeger[params.get('Page')] || regionManeger["A"]),
+          'immer': 'https://unpkg.com/immer@6.0.3/dist/immer.umd.production.min',
+        }
+      });
+      require(['jsx!App/App']);
+    </script>
+  </body>
+</html>
