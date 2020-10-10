@@ -25,7 +25,5 @@ define(['immer'],({produce})=>{
   },{});
 
   const ActionType = createAction(Actions);
-
   return ActionType;
-
 });

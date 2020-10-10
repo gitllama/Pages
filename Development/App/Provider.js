@@ -1,3 +1,4 @@
+/******** Provider ********/
 'use strict';
 
 define(
@@ -16,33 +17,20 @@ define(
     Store,
   )=>{
 
-  /*
-    const LazyComponent = lazy(() => import('.App/Components/Another'));
-    <React.Suspense fallback={<div>Loading...</div>}>  
-    </React.Suspense>
-  */
-
-  //イベントリスナー
-  const screenChanged =(dispatch)=> window.addEventListener("orientationchange", ()=>{
-    setTimeout(()=>{ //遅延させないと処理間に合わない？
-      const width = window.parent.screen.width
-      const height = window.parent.screen.height
-      dispatch({ type: ActionType.SCREEN, value:{width:width,height:height}});
-    }, 100);
-  });
-
-
-  const Provider = ({children}) => {
+  const Provider = ({children, eventTarget}) => {
     const [state, dispatch] = React.useReducer(reducer, initialState);
     React.useEffect(() => {
       console.log('Provider mounting...');
-      screenChanged(dispatch);
+      Object.keys(eventTarget).map(key => {
+        eventTarget[key](dispatch);
+      });
       dispatch({ type: ActionType.LOADED});
       return () => console.log('Provider unmounting...');
     }, []);
     return <Store.Provider value={{state, dispatch}}>{children}</Store.Provider>;
   }
-  const Provider2 = ({children}) => {
+
+  const OldProvider = ({children}) => {
     const [state, dispatch] = React.useReducer(reducer, initialState);
     const [open, setOpen] = React.useState(false);
     const isFirstRender = React.useRef(true);

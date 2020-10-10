@@ -7,30 +7,26 @@
   <body>
     <!-- root -->
     <div id="root"></div>
-    
     <!-- Fonts and Icons to support Material Design -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,400,500,700&display=swap" />
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
-
+    <!-- Logic -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js"></script>
     <script type="module">
       import { Octokit } from "https://cdn.skypack.dev/@octokit/rest";
       import { graphql } from "https://cdn.skypack.dev/@octokit/graphql";
       window.Octokit = Octokit;
       window.graphql = graphql;
-      window.babelConfig = {
-      };
+      window.babelConfig = {};
       requirejs.config({
         paths: {
-          'jsx': 'App/Loader/react-require.min',
+          'jsx': 'App/Logic/react-require.min',
           'babel': 'https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/6.26.0/babel.min',
-          'react': 'https://unpkg.com/react@16/umd/react.production.min',
-          'react-dom': 'https://unpkg.com/react-dom@16/umd/react-dom.production.min',
+          'react': 'https://unpkg.com/react@16/umd/react.development',
+          'react-dom': 'https://unpkg.com/react-dom@16/umd/react-dom.development',
           'material-ui': 'https://unpkg.com/@material-ui/core@latest/umd/material-ui.production.min',
-          
           'immer': 'https://unpkg.com/immer@6.0.3/dist/immer.umd.production.min',
         },
-
       });
       require(['jsx!App/App']);
     </script>

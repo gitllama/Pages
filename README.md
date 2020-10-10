@@ -2,8 +2,8 @@
 
 ## 1. developing
 
-https://gitllama.github.io/Pages/  
-https://gitllama.github.io/Pages/Examples_React16/05_MaterialAppBar
+https://gitllama.github.io/Pages/Development
+
 
 手持ちデバイスではwidth  
  Android Phone : 360  

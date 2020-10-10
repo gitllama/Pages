@@ -3,6 +3,8 @@
 
 define(['immer'],({produce})=>{
 
+  const flagUrlTransition = false;
+
   const reducers = {
     LOADING : (draft, action) => { draft.loading = true; },
     LOADED : (draft, action) => { draft.loading = false; },
@@ -48,7 +50,12 @@ define(['immer'],({produce})=>{
   const createReducer =(handlers)=>{
     return (state, action) => {
       console.log("reducer", action);
-      if (handlers.hasOwnProperty(action.type)) {
+      if((action.type == "NAVIGATE")&&flagUrlTransition){
+        const dst = produce(state, draft => handlers[action.type](draft, action));
+        localStorage.setItem('localStorageState', JSON.stringify(dst))
+        window.location.href = `${(new URL(document.location)).pathname}?Page=${dst.region}`;
+        return dst;
+      }else if (handlers.hasOwnProperty(action.type)) {
         //return handlers[action.type](state, action);
         return produce(state, draft => handlers[action.type](draft, action));
       } else {

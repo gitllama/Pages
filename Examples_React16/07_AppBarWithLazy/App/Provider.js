@@ -16,12 +16,6 @@ define(
     Store,
   )=>{
 
-  /*
-    const LazyComponent = lazy(() => import('.App/Components/Another'));
-    <React.Suspense fallback={<div>Loading...</div>}>  
-    </React.Suspense>
-  */
-
   const Provider = ({children}) => {
     const [state, dispatch] = React.useReducer(reducer, initialState);
     const [open, setOpen] = React.useState(false);

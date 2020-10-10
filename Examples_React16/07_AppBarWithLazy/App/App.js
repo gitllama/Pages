@@ -39,7 +39,6 @@ define(
         <Box mt={3}>
           <Copyright name="gitllama" href="https://github.com/gitllama"/>
         </Box>
-        {}
       </AppBar>
     </Provider>
   );

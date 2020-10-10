@@ -31,4 +31,14 @@ React.lazy + React.Suspenseを使いたいところだけど、importの利用�
 ```
 <Hello toWhat="World">Hello world!</>,
 React.createElement(Hello, {toWhat: 'World'}, "Hello world!"),
-```//https://github.com/gregberge/loadable-components
+
+babel-plugin-syntax-dynamic-import
+
+https://github.com/gregberge/loadable-components
+
+  /*
+    const LazyComponent = lazy(() => import('.App/Components/Another'));
+    <React.Suspense fallback={<div>Loading...</div>}>  
+    </React.Suspense>
+  */
+```

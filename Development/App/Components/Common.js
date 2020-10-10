@@ -11,6 +11,39 @@ define(['react', 'jsx!App/actions', 'App/store', 'material-ui'],
   }
 )=>{
 
+  const Selector =({defultRegion, children})=> {
+    const { state, dispatch } = React.useContext(Store);
+    React.useEffect(() => {
+      if(defultRegion){
+        dispatch({ type: ActionType.NAVIGATE, value : defultRegion });
+      }
+    }, []);
+    return (
+      <React.Fragment>{
+        Object.keys(children).indexOf(state.region) !== -1
+        ? (<React.Fragment>{children[state.region]}</React.Fragment>)
+        : (<div>null</div>)
+      }</React.Fragment>
+    );
+  }
+
+  const lazy =(path)=> {  
+    const Dst =()=>{
+      const [isTransition, setTransition] = React.useState(false);
+      React.useEffect(() =>{
+        console.log(path)
+        requirejs([path], (obj)=>{ setTransition(true); });
+      }, []);
+      if (isTransition) {
+        let Dependency = require(path);
+        return <Dependency/>;
+      }else{
+        return <div>Loading...</div>;
+      }
+    }
+    return <Dst/>;
+  }
+
   const Loading =({children,type})=>{
     const { state } = React.useContext(Store);
     switch(type){
@@ -79,7 +112,28 @@ define(['react', 'jsx!App/actions', 'App/store', 'material-ui'],
     );
   }
 
-  return {Loading, Copyright, ErrSnackbar};
+  class ErrorBoundary extends React.Component {
+    constructor(props) {
+      super(props);
+        this.state = { hasError: false };
+      }
+      static getDerivedStateFromError(error) {
+        // Update state so the next render will show the fallback UI.
+        return { hasError: true };
+      }
+      componentDidCatch(error, errorInfo) {
+        // You can also log the error to an error reporting service
+        logErrorToMyService(error, errorInfo);
+      }
+      render() {
+        if (this.state.hasError) {
+          return <h1>Something went wrong.</h1>;
+        }
+        return this.props.children; 
+      }
+  };
+  
+  return {Selector, lazy, Loading, Copyright, ErrSnackbar, ErrorBoundary};
 });
 
 /*
