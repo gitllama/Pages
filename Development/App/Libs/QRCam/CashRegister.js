@@ -77,7 +77,7 @@ define([
     return (
       <Grid item xs={12}>
         <Grid item xs={6}>
-          <video id="player" style={{objectFit: "scaleDown"}} ref={refVideo} autoPlay></video>
+          <video id="player" style={{objectFit: "fill"}} ref={refVideo} autoPlay></video>
           <canvas id="snapshot" style={{display:"none"}} ref={refSnap}
           width={state.screen.width > state.screen.height ? camWidth : camHeight}
           height={state.screen.width > state.screen.height ? camHeight : camWidth}></canvas>
