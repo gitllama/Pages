@@ -68,7 +68,7 @@ define([
     // コンポーネントが削除された後にコールバックが呼ばれることがあるので
     // unmountedフラグいるよ
     React.useEffect(() => {
-      dispatch({ type: ActionType.LOADING});
+      dispatch({ type: ActionType.LOADING, value:"mermaid"});
       let unmounted = false;
       ref.current.innerHTML = "";
       (async () => {    
@@ -95,7 +95,7 @@ define([
             // 作業用のdivつけてないと再描画の度にゴミdivつくるらしい
             // display:noneだと幅が取れなく描画崩れるそうなので裏に隠す方が良い
           );
-          dispatch({ type: ActionType.LOADED});
+          dispatch({ type: ActionType.LOADED, value:"mermaid"});
         }
       })();
       return (()=>{ unmounted = true; });

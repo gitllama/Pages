@@ -6,7 +6,9 @@ define(['immer'],({produce})=>{
   const Actions = [
     'LOADING',
     'LOADED',
+
     'NAVIGATE',
+
     'TITLE',
     'SCREEN',
 

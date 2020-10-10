@@ -24,7 +24,6 @@ define(
       Object.keys(eventTarget).map(key => {
         eventTarget[key](dispatch);
       });
-      dispatch({ type: ActionType.LOADED});
       return () => console.log('Provider unmounting...');
     }, []);
     return <Store.Provider value={{state, dispatch}}>{children}</Store.Provider>;

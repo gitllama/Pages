@@ -6,18 +6,12 @@ define(['react', 'jsx!App/actions', 'App/store', 'material-ui'],
   ActionType,
   Store,
   {
-    Backdrop, CircularProgress, Typography, Link,
-    Snackbar, Button
+    Backdrop, CircularProgress, Typography, Link, Snackbar, Button
   }
 )=>{
 
-  const Selector =({defultRegion, children})=> {
+  const Selector =({children})=> {
     const { state, dispatch } = React.useContext(Store);
-    React.useEffect(() => {
-      if(defultRegion){
-        dispatch({ type: ActionType.NAVIGATE, value : defultRegion });
-      }
-    }, []);
     return (
       <React.Fragment>{
         Object.keys(children).indexOf(state.region) !== -1
@@ -29,10 +23,15 @@ define(['react', 'jsx!App/actions', 'App/store', 'material-ui'],
 
   const lazy =(path)=> {  
     const Dst =()=>{
+      const { state, dispatch } = React.useContext(Store);
       const [isTransition, setTransition] = React.useState(false);
       React.useEffect(() =>{
         console.log(path)
-        requirejs([path], (obj)=>{ setTransition(true); });
+        dispatch({ type: ActionType.LOADING, value: path});
+        requirejs([path], (obj)=>{ 
+          setTransition(true); 
+          dispatch({ type: ActionType.LOADED, value: path});
+        });
       }, []);
       if (isTransition) {
         let Dependency = require(path);
@@ -44,28 +43,15 @@ define(['react', 'jsx!App/actions', 'App/store', 'material-ui'],
     return <Dst/>;
   }
 
-  const Loading =({children,type})=>{
+  const Loading =({children})=>{
     const { state } = React.useContext(Store);
-    switch(type){
-      case 'circular':
-        return(
-          <React.Fragment>
-          <Backdrop open={state.loading} style={{zIndex:"100"}}>
-            <CircularProgress color="inherit"/>
-          </Backdrop>
-          {children}
-          </React.Fragment>
-        );
-      default:
-        return(
-          <React.Fragment>
-            <Backdrop open={state.loading} color="white" style={{background: 'white',zIndex:"100"}}>
-              <div>Loading...</div>            
-            </Backdrop>
-            {children}
-          </React.Fragment>
-        );
-    }
+    return(
+      <React.Fragment>
+        <Backdrop open={state.loading.length > 0} style={{zIndex:"100"}}>
+          <CircularProgress color="inherit"/>
+        </Backdrop>
+      </React.Fragment>
+    );
   }
   
   const Copyright =({name,href})=> {
@@ -112,35 +98,5 @@ define(['react', 'jsx!App/actions', 'App/store', 'material-ui'],
     );
   }
 
-  class ErrorBoundary extends React.Component {
-    constructor(props) {
-      super(props);
-        this.state = { hasError: false };
-      }
-      static getDerivedStateFromError(error) {
-        // Update state so the next render will show the fallback UI.
-        return { hasError: true };
-      }
-      componentDidCatch(error, errorInfo) {
-        // You can also log the error to an error reporting service
-        logErrorToMyService(error, errorInfo);
-      }
-      render() {
-        if (this.state.hasError) {
-          return <h1>Something went wrong.</h1>;
-        }
-        return this.props.children; 
-      }
-  };
-  
-  return {Selector, lazy, Loading, Copyright, ErrSnackbar, ErrorBoundary};
+  return {Selector, lazy, Copyright, Loading, ErrSnackbar};
 });
-
-/*
-
-        <Alert severity="error">{state.err.message}</Alert >
-
-            <IconButton size="small" aria-label="close" color="inherit" onClick={handleClose}>
-              <CloseIcon fontSize="small" />
-            </IconButton>
-*/

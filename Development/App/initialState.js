@@ -12,7 +12,7 @@ define([],()=>{
   }
 
   const initialState = Object.assign({
-    loading : true,
+    loading : [],
     region : 'Home',
     oldRegion : [],
     title : document.title,

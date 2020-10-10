@@ -14,7 +14,7 @@ define(
     ReactDOM, 
     Provider,
     AppBar,
-    { Selector, lazy, Copyright, ErrSnackbar },
+    { Selector, lazy, Copyright, Loading, ErrSnackbar },
     { Box, CssBaseline },
   )=>{
 
@@ -25,6 +25,7 @@ define(
     QRCam : lazy('jsx!App/Libs/QRCam/QRCam'),
     QRCamPopup : lazy('jsx!App/Libs/QRCam/QRCamPopup'),
     CreateQR : lazy('jsx!App/Libs/QRCam/CreateQR'),
+    CashRegister : lazy('jsx!App/Libs/QRCam/CashRegister'),
     Default : (<div>under construction</div>),
   };
 
@@ -43,6 +44,7 @@ define(
   const App = () => (
     <Provider eventTarget={eventTarget}>
       <AppBar title="Test" regions={regionManeger}>
+        <Loading/>
         <Box mt={10} width="auto" minHeight={480}>
           <Selector>{regionManeger}</Selector>
         </Box>

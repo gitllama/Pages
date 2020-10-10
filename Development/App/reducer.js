@@ -6,8 +6,12 @@ define(['immer'],({produce})=>{
   const flagUrlTransition = false;
 
   const reducers = {
-    LOADING : (draft, action) => { draft.loading = true; },
-    LOADED : (draft, action) => { draft.loading = false; },
+
+    LOADING : (draft, action) => { draft.loading.push(action.value); },
+    LOADED : (draft, action) => {
+      const found = draft.loading.findIndex(element => element == action.value);
+      if(found > -1) draft.loading.splice(found, 1);
+    },
     
     NAVIGATE : (draft, action) => {
       if(action.value == 'back'){
