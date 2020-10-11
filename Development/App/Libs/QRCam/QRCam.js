@@ -9,8 +9,6 @@ define([
   Store
 )=>{
 
-  console.log("Call QRCam");
-
   const asyncWait = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
   const asyncRequirejsQR = ()=>{

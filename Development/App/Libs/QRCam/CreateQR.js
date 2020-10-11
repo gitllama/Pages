@@ -46,7 +46,7 @@ define([
 
   const asyncGetIssueFromNum = async (owner, repo, num, accessToken)=> {
     if(accessToken == undefined){
-      let octokit = new Octokit();
+      let octokit = await asyncOctokit();
       let issue = await octokit.issues.get({
         owner : owner,
         repo : repo,

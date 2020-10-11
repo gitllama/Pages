@@ -57,5 +57,6 @@ define(
   // mt : margin-top, width={1} : 100%
   // Boxの色 : bgcolor="grey.300"
 
+
   ReactDOM.render(<App />, document.getElementById('root'));
 });

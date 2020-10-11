@@ -12,11 +12,18 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
     <!-- Logic -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js"></script>
-    <script type="module">
-      import { Octokit } from "https://cdn.skypack.dev/@octokit/rest";
-      import { graphql } from "https://cdn.skypack.dev/@octokit/graphql";
-      window.Octokit = Octokit;
-      window.graphql = graphql;
+    <script>
+      // babel内ではimport使えないので、外部で遅延リードの準備
+      // アイドル時読み込みしたい
+      const asyncOctokit = async () =>{ 
+        let hoge = await import('https://cdn.skypack.dev/@octokit/rest');
+        return new hoge.Octokit();
+      }
+      const asyncGraphql = async () =>{
+        let dst = await import('https://cdn.skypack.dev/@octokit/graphql');
+        return dst;
+      }
+      
       window.babelConfig = {};
       requirejs.config({
         paths: {

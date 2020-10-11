@@ -3,6 +3,7 @@
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="minimum-scale=1, initial-scale=1, width=device-width" />
+    <link rel="shortcut icon" href="favicon.ico"/> 
   </head>
   <body>
     <!-- root -->
@@ -12,8 +13,17 @@
     <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons" />
     <!-- Logic -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js"></script>
-    <script type="module" async src="App/Logic/octokit.js"></script>    
     <script>
+      // babel内ではimport使えないので、外部で遅延リードの準備
+      // アイドル時読み込みしたい
+      const asyncOctokit = async () =>{ 
+        let hoge = await import('https://cdn.skypack.dev/@octokit/rest');
+        return new hoge.Octokit();
+      }
+      const asyncGraphql = async () =>{
+        let dst = await import('https://cdn.skypack.dev/@octokit/graphql');
+        return dst;
+      }
       (async()=>{
         window.babelConfig = {};
         requirejs.config({
@@ -29,6 +39,5 @@
         require(['jsx!App/App']);
       })();
     </script>
-
   </body>
 </html>

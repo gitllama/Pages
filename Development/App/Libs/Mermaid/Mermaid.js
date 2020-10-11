@@ -10,8 +10,6 @@ define([
   {Grid, Paper}
 )=>{
 
-  console.log("mermaid");
-
   const asyncCallA = ()=>{
     return new Promise((resolve, reject) => {
       requirejs(
@@ -71,7 +69,10 @@ define([
       dispatch({ type: ActionType.LOADING, value:"mermaid"});
       let unmounted = false;
       ref.current.innerHTML = "";
-      (async () => {    
+      (async () => {
+        let a = await asyncOctokit();
+        console.log(a);
+
         let mermaid = await asyncCallA();
         mermaid.initialize({
           startOnLoad:false,
