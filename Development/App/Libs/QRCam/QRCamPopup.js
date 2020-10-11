@@ -21,15 +21,6 @@ define([
     });
   }
 
-  const getCurrentTrack = (stream)=>{
-    stream.getVideoTracks().forEach(track=>{
-      if(track.readyState = "live"){
-        const dst = track.getSettings();
-        return {width : dst.width, height: dst.height};
-      }
-    });
-  }
-
   const camWidth = 320;
   const camHeight = 240;
   const waitTime = 300;

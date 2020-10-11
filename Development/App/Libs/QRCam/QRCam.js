@@ -22,15 +22,6 @@ define([
     });
   }
 
-  const getCurrentTrack = (stream)=>{
-    stream.getVideoTracks().forEach(track=>{
-      if(track.readyState = "live"){
-        const dst = track.getSettings();
-        return {width : dst.width, height: dst.height};
-      }
-    });
-  }
-
   const QRCam = ()=>{
     const { state, dispatch } = React.useContext(Store);
     const [result, setResult] = React.useState(undefined);
