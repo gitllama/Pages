@@ -113,4 +113,5 @@ dist
 .vscode-test
 
 # End of https://www.toptal.com/developers/gitignore/api/node
-indexWithPass.html
+_*.html
+_*.js

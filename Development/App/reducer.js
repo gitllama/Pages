@@ -60,44 +60,13 @@ define(['immer'],({produce})=>{
         window.location.href = `${(new URL(document.location)).pathname}?Page=${dst.region}`;
         return dst;
       }else if (handlers.hasOwnProperty(action.type)) {
-        //return handlers[action.type](state, action);
         return produce(state, draft => handlers[action.type](draft, action));
       } else {
         throw new Error('Err : createReducer');
-        //return state;
-        //return produce(state, draft => draft.ERR = 'Err : Reducer' );
       }
     }
   };
 
   const reducer = createReducer(reducers);
   return reducer;
-
 });
-
-/*
- 
-    TITLE : (state, action) => {
-      document.title = action.value;
-      return { ...state, title : action.value }
-    },
-    ASYNCLOGIN : (state, action) => {
-      const nextState = { ...state };
-      nextState.authName = action.value;
-      nextState.loading = false;
-      return nextState;
-    },
-    ASYNCSEARCHISSUE : (state, action) => {
-      const nextState = { ...state };
-      nextState.issuelist = action.value;
-      nextState.loading = false;
-      return nextState;
-    },
-    LOGOUT : (state, action) => {
-      const nextState = { ...state };
-      api.changeAuth(undefined);
-      nextState.authName = undefined;
-      return nextState;
-    },
-
-*/

@@ -21,8 +21,6 @@ define(['immer'],({produce})=>{
   
   const createAction =(src)=> src.reduce((accumulator, currentValue) =>{
     if (currentValue in accumulator) throw new Error('Err : createAction');
-    //return ({...accumulator, [currentValue] : currentValue});
-    //return Object.assign({}, accumulator, {[currentValue] :currentValue});
     return produce(accumulator, draft => { draft[currentValue] = currentValue; });
   },{});
 

@@ -19,15 +19,8 @@ define(
   )=>{
 
   /* Regions */
-  const regionManeger = {
-    Home : lazy('jsx!App/Components/Home'),
-    Mermaid : lazy('jsx!App/Libs/Mermaid/Mermaid'),
-    QRCam : lazy('jsx!App/Libs/QRCam/QRCam'),
-    QRCamPopup : lazy('jsx!App/Libs/QRCam/QRCamPopup'),
-    CreateQR : lazy('jsx!App/Libs/QRCam/CreateQR'),
-    CashRegister : lazy('jsx!App/Libs/QRCam/CashRegister'),
-    Default : (<div>under construction</div>),
-  };
+  const objectMap = (obj, fun) => Object.fromEntries(Object.entries(obj).map(fun));
+  const regionManeger = objectMap(regionPaths, ([ key, val ]) => [ key, lazy(val) ]);
 
   /* EventListener */
   const eventTarget = {
@@ -45,11 +38,12 @@ define(
     <Provider eventTarget={eventTarget}>
       <AppBar title="Test" regions={regionManeger}>
         <Loading/>
+        <ErrSnackbar/>
         <Box mt={10} width="auto" minHeight={480}>
           <Selector>{regionManeger}</Selector>
         </Box>
         <Box mt={3}>
-          <Copyright name="gitllama" href="https://github.com/gitllama"/>
+          <Copyright name={globalVariables.organization} href={globalVariables.href}/>
         </Box>
       </AppBar>
     </Provider>
@@ -57,6 +51,6 @@ define(
   // mt : margin-top, width={1} : 100%
   // Boxの色 : bgcolor="grey.300"
 
-
   ReactDOM.render(<App />, document.getElementById('root'));
+
 });
